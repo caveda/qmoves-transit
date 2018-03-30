@@ -1,7 +1,7 @@
 package main
 
-import "fmt"
+import "github.com/caveda/qmoves-transit/pkg/fetcher"
 
 func main() {
-	fmt.Println("hello qmoves transit server")
+	fetcher.Fetch("www.example.com")
 }

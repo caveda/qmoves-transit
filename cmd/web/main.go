@@ -1,13 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/caveda/qmoves-transit/pkg/fetcher"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello QMoves transit!")
+	fetcher.Fetch("www.exampleWeb.com")
 }
 
 func main() {
