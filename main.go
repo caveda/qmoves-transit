@@ -4,11 +4,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/caveda/qmoves-transit/pkg/fetcher"
+	transit "github.com/caveda/qmoves-transit/lib"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fetcher.Fetch("www.exampleWeb.com")
+	transit.Fetch("www.exampleWeb.com")
 }
 
 func main() {
