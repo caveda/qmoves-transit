@@ -2,6 +2,10 @@
 // information.
 package transit
 
+type TransitSource struct {
+	Blob, Uri string
+}
+
 type Coordinates struct {
 	lat, long string
 }

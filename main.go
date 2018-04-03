@@ -8,10 +8,13 @@ import (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	transit.Fetch("www.exampleWeb.com")
 }
 
 func main() {
+	setupEnvironment(transit.EnvNameBilbao, "bilbao_transit.dat")
+	s := transit.GetSources()
+	log.Printf("Sources read: %v", s)
+
 	http.HandleFunc("/", handler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
