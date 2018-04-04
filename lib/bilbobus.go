@@ -17,13 +17,21 @@ type Bilbobus struct {
 
 func GetSources() []TransitSource {
 	envData := os.Getenv(EnvNameBilbao)
+	// Base case
+	if len(envData) == 0 {
+		log.Printf("Warning: Env variable %v is empty!", EnvNameBilbao)
+		return make([]TransitSource, 0)
+	}
+
 	var sources []TransitSource
 	dec := json.NewDecoder(strings.NewReader(envData))
+	dec.DisallowUnknownFields()
 	for {
 		if err := dec.Decode(&sources); err == io.EOF {
 			break
 		} else if err != nil {
-			log.Fatal(err)
+			log.Printf("Error while parsing input: %v ", envData)
+			return nil
 		}
 	}
 	return sources
