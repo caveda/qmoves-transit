@@ -18,9 +18,10 @@ var getSourcesTestCases = []struct {
 }
 
 func TestGetSources(t *testing.T) {
+	var bilboBus Bilbobus
 	for _, tc := range getSourcesTestCases {
 		os.Setenv(EnvNameBilbao, tc.input)
-		result := GetSources()
+		result := bilboBus.GetSources()
 		if !areEqual(result, tc.expected) {
 			t.Errorf("GetSources(%v): expected %v, actual %v", tc.input, tc.expected, result)
 		}
@@ -46,13 +47,4 @@ func areEqual(a, b []TransitSource) bool {
 		}
 	}
 	return true
-}
-
-func TestParse(t *testing.T) {
-}
-
-func TestLines(t *testing.T) {
-}
-
-func TestStops(t *testing.T) {
 }

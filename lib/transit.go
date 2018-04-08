@@ -11,18 +11,17 @@ type Coordinates struct {
 }
 
 type Stop struct {
-	id          string
-	order       int
-	name        string
-	location    Coordinates
-	connections []string
+	Id          string `json:"Id,omitempty"`
+	Name        string `json:"Name,omitempty"`
+	Connections string `json:"Connections,omitempty"`
+	Schedule    string `json:"Schedule,omitempty"`
 }
 
 type Line struct {
-	id        string
-	name      string
-	direction string
-	stops     []Stop
+	Id        string `json:"Id,omitempty"`
+	Name      string `json:"Name,omitempty"`
+	Direction string `json:"Direction,omitempty"`
+	Stops     []Stop `json:"Stops,omitempty"`
 }
 
 // Parser is an interface that must be implemented per transit agency.

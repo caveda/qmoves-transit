@@ -15,3 +15,6 @@
 
 # transit data configuration
 *transit.dat
+
+# data
+*.zip
