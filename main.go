@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path"
 
 	transit "github.com/caveda/qmoves-transit/lib"
 )
@@ -37,7 +36,7 @@ func prepare() {
 	sources := bilboBus.GetSources()
 	for _, s := range sources {
 		log.Printf("Sources read: %v", s)
-		transit.Download(path.Join(downloadFolder, s.Blob), s.Uri)
-		bilboBus.Parse(path.Join(downloadFolder, s.Blob))
+		transit.Download(s.Uri, s.Path)
 	}
+	bilboBus.Digest(sources)
 }

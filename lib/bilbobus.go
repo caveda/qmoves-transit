@@ -3,6 +3,7 @@ package transit
 import (
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"os"
@@ -37,7 +38,7 @@ func (p Bilbobus) GetSources() []TransitSource {
 		if err := dec.Decode(&sources); err == io.EOF {
 			break
 		} else if err != nil {
-			log.Printf("Error while parsing input: %v ", envData)
+			log.Printf("Error while parsing input: %v ", err)
 			return nil
 		}
 	}
@@ -45,14 +46,36 @@ func (p Bilbobus) GetSources() []TransitSource {
 }
 
 // Process the data files in folder dataPath and build the data model.
-func (p *Bilbobus) Parse(dataPath string) error {
-	p.lines = digestLines(dataPath)
+func (p *Bilbobus) Digest(sources []TransitSource) error {
+	var err error
+	for _, s := range sources {
+		if s.Id == SourceLines {
+			err = digestLines(&p.lines, s)
+			if err != nil {
+				log.Printf("Error while processing source %v from path %v", s.Id, s.Path)
+				return err
+			}
+		}
+	}
 	return nil
 }
 
-// Process the data files in folder dataPath and build the data model.
+// Observer that returns the list of lines for this transit.
 func (p Bilbobus) Lines() []Line {
 	return p.lines
+}
+
+func GetParser(id string) (Parse, error) {
+	if id == SourceLines {
+		return digestLines, nil
+	}
+	return nil, errors.New("Unknown source id " + id)
+}
+
+// LocationDecorator implements the signature of type Decorator.
+// It's responsible for decorating lines with the location of the stops.
+func LocationDecorator(l *[]Line, ts TransitSource) error {
+	return errors.New("Not implemented")
 }
 
 func getLineDirection(name string, rawDirection string) string {
@@ -98,20 +121,21 @@ func toSlice(m map[string]Line) []Line {
 	return v
 }
 
-func digestLines(dataFilePath string) []Line {
-	f, err := os.Open(dataFilePath)
+func digestLines(l *[]Line, s TransitSource) error {
+	f, err := os.Open(s.Path)
 	if err != nil {
-		log.Printf("Error reading %v. Error: %v ", dataFilePath, err)
-		return nil
+		log.Printf("Error reading %v. Error: %v ", s.Path, err)
+		return err
 	}
 	defer f.Close()
 
-	log.Printf("File %v opened", dataFilePath)
+	log.Printf("File %v opened", s.Path)
 	// Process csv file
 	csvr := csv.NewReader(f)
 	csvr.FieldsPerRecord = -1 // No checks
 	csvr.LazyQuotes = true
 	csvr.Comma = ';'
+
 	// Prepare containers
 	lines := make(map[string]Line)
 	stops := make(map[string]Stop)
@@ -126,7 +150,7 @@ func digestLines(dataFilePath string) []Line {
 				break
 			}
 			log.Printf("Read csv %v", err)
-			return nil
+			return err
 		}
 
 		if !firstIgnored {
@@ -139,5 +163,6 @@ func digestLines(dataFilePath string) []Line {
 		digestLineStopRow(row, lines, stops)
 	}
 
-	return toSlice(lines)
+	*l = toSlice(lines)
+	return nil
 }

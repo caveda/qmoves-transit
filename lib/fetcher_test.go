@@ -9,7 +9,7 @@ import (
 
 func TestDownload(t *testing.T) {
 	targetPath := "./test/golang.doc"
-	downloadErr := Download(targetPath, "https://golang.org/doc/")
+	downloadErr := Download("https://golang.org/doc/", targetPath)
 	if downloadErr != nil {
 		t.Errorf("Download returned error: %v", downloadErr)
 	}

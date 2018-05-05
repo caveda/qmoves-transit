@@ -11,10 +11,10 @@ var getSourcesTestCases = []struct {
 }{
 	{``, make([]TransitSource, 0)},
 	{`[]`, make([]TransitSource, 0)},
-	{`[{ "Blob":"whatever" , "Uri": "http://whatever.com/asdf?a=1&b=2"}]`, []TransitSource{TransitSource{"whatever", "http://whatever.com/asdf?a=1&b=2"}}},
-	{`[{ "Blob":"s1" , "Uri": "abc"},{ "Blob":"s2" , "Uri": "abc2"}]`, []TransitSource{TransitSource{"s1", "abc"}, TransitSource{"s2", "abc2"}}},
+	{`[{ "Path":"whatever" , "Uri": "http://whatever.com/asdf?a=1&b=2", "Id":"whatever1"}]`, []TransitSource{TransitSource{"whatever", "http://whatever.com/asdf?a=1&b=2", "whatever1"}}},
+	{`[{ "Path":"s1" , "Uri": "abc", "Id":"Id1"},{ "Path":"s2" , "Uri": "abc2", "Id":"Id2"}]`, []TransitSource{TransitSource{"s1", "abc", "Id1"}, TransitSource{"s2", "abc2", "Id2"}}},
 	{`[{ "malformed json":]`, nil},
-	{`[{ "Blo":"malformed name" , "Uri": "abc"}]`, nil},
+	{`[{ "Path":"malformed name" , "Uri": "abc", "Idd":"s"}, ""]`, nil},
 }
 
 func TestGetSources(t *testing.T) {

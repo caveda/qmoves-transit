@@ -10,9 +10,16 @@ import (
 	"path/filepath"
 )
 
-// Download pulls down the content of the provided url and stores in filepath.
+// Downloads all sources passed as argument.
+// func DownloadAll(sources []TransitSource) {
+// 	for _, s in range sources {
+// 		Download(s.Uri, s.Path)
+// 	}
+// }
+
+// Pulls down the content of the provided url and stores in filepath.
 // If anything goes wrong it returns an error otherwise nil
-func Download(fileFullPath string, url string) (err error) {
+func Download(url string, fileFullPath string) (err error) {
 	// Create the file
 	os.MkdirAll(filepath.Dir(fileFullPath), os.ModePerm)
 	out, err := os.Create(fileFullPath)
