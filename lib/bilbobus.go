@@ -49,12 +49,15 @@ func (p Bilbobus) GetSources() []TransitSource {
 func (p *Bilbobus) Digest(sources []TransitSource) error {
 	var err error
 	for _, s := range sources {
-		if s.Id == SourceLines {
-			err = digestLines(&p.lines, s)
-			if err != nil {
-				log.Printf("Error while processing source %v from path %v", s.Id, s.Path)
-				return err
-			}
+		parser, e := getParser(s)
+		if e != nil {
+			log.Printf("Error getting parser for source %v: %v", s.Id, e)
+			continue
+		}
+		err = parser(&p.lines, s)
+		if err != nil {
+			log.Printf("Error while processing source %v from path %v. Error: %v ", s.Id, s.Path, err)
+			return err
 		}
 	}
 	return nil
@@ -65,16 +68,29 @@ func (p Bilbobus) Lines() []Line {
 	return p.lines
 }
 
-func GetParser(id string) (Parse, error) {
-	if id == SourceLines {
-		return digestLines, nil
+// getParser returns the proper parser for the given transitSource.
+func getParser(s TransitSource) (Parse, error) {
+	switch s.Id {
+	case SourceLines:
+		return linesParser, nil
+	case SourceLocation:
+		return locationParser, nil
+	case SourceSchedule:
+		return scheduleParser, nil
+	default:
+		return nil, errors.New("Unknown source id " + s.Id)
 	}
-	return nil, errors.New("Unknown source id " + id)
 }
 
-// LocationDecorator implements the signature of type Decorator.
+// LocationParser implements the signature of type Decorator.
 // It's responsible for decorating lines with the location of the stops.
-func LocationDecorator(l *[]Line, ts TransitSource) error {
+func locationParser(l *[]Line, ts TransitSource) error {
+	return errors.New("Not implemented")
+}
+
+// ScheduleParser implements the signature of type Decorator.
+// It's responsible for decorating lines with the location of the stops.
+func scheduleParser(l *[]Line, ts TransitSource) error {
 	return errors.New("Not implemented")
 }
 
@@ -121,7 +137,7 @@ func toSlice(m map[string]Line) []Line {
 	return v
 }
 
-func digestLines(l *[]Line, s TransitSource) error {
+func linesParser(l *[]Line, s TransitSource) error {
 	f, err := os.Open(s.Path)
 	if err != nil {
 		log.Printf("Error reading %v. Error: %v ", s.Path, err)
