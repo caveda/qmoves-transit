@@ -6,30 +6,47 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
-)
 
-// Downloads all sources passed as argument.
-// func DownloadAll(sources []TransitSource) {
-// 	for _, s in range sources {
-// 		Download(s.Uri, s.Path)
-// 	}
-// }
+	"github.com/secsy/goftp"
+)
 
 // Pulls down the content of the provided url and stores in filepath.
 // If anything goes wrong it returns an error otherwise nil
-func Download(url string, fileFullPath string) (err error) {
-	// Create the file
+func Download(address string, fileFullPath string) (err error) {
+	// Create the folder
 	os.MkdirAll(filepath.Dir(fileFullPath), os.ModePerm)
-	out, err := os.Create(fileFullPath)
+
+	// Sources may have different protocols
+	u, err := url.Parse(address)
+	if err != nil {
+		return err
+	}
+
+	if u.Scheme == "http" || u.Scheme == "https" {
+		err = fetchHTTP(u, fileFullPath)
+	} else if u.Scheme == "ftp" {
+		err = fetchFTP(u, fileFullPath)
+	} else {
+		err = fmt.Errorf("Unknown protocol for url %v", address)
+	}
+
+	return err
+}
+
+// fetchHTTP retrieves the file url points to via HTTP.
+// Output file is created in destPath.
+func fetchHTTP(u *url.URL, destPath string) error {
+	out, err := os.Create(destPath)
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
 	// Get the data
-	resp, err := http.Get(url)
+	resp, err := http.Get(u.String())
 	if err != nil {
 		return err
 	}
@@ -45,5 +62,30 @@ func Download(url string, fileFullPath string) (err error) {
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+// fetchFTP retrieves the file url points to via FTP.
+// Output file is created in destPath.
+func fetchFTP(u *url.URL, destPath string) (err error) {
+
+	// Create client object with default config
+	client, err := goftp.Dial(u.Hostname())
+	if err != nil {
+		return err
+	}
+
+	// Download a file to disk
+	readme, err := os.Create(destPath)
+	if err != nil {
+		return err
+	}
+
+	err = client.Retrieve(u.RequestURI(), readme)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -19,10 +19,11 @@ type Coordinates struct {
 }
 
 type Stop struct {
-	Id          string `json:"Id,omitempty"`
-	Name        string `json:"Name,omitempty"`
-	Connections string `json:"Connections,omitempty"`
-	Schedule    string `json:"Schedule,omitempty"`
+	Id          string      `json:"Id,omitempty"`
+	Name        string      `json:"Name,omitempty"`
+	Connections string      `json:"Connections,omitempty"`
+	Schedule    string      `json:"Schedule,omitempty"`
+	Location    Coordinates `json:"Location,omitempty"`
 }
 
 type Line struct {

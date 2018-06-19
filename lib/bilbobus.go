@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -20,6 +21,7 @@ const EnvNameBilbao string = "BILBAO_TRANSIT"
 const DirectionForward string = "FORWARD"
 const DirectionBackward string = "BACKWARD"
 const separator string = "-"
+const gtsfStopsFileName string = "stops.txt"
 
 // Read the data sources from the env var.
 // Returns the list of sources.
@@ -57,7 +59,7 @@ func (p *Bilbobus) Digest(sources []TransitSource) error {
 		err = parser(&p.lines, s)
 		if err != nil {
 			log.Printf("Error while processing source %v from path %v. Error: %v ", s.Id, s.Path, err)
-			return err
+			continue
 		}
 	}
 	return nil
@@ -85,10 +87,69 @@ func getParser(s TransitSource) (Parse, error) {
 // LocationParser implements the signature of type Decorator.
 // It's responsible for decorating lines with the location of the stops.
 func locationParser(l *[]Line, ts TransitSource) error {
-	return errors.New("Not implemented")
+	baseDir := path.Dir(ts.Path)
+	p := path.Join(baseDir, gtsfStopsFileName)
+	err := UnzipFromArchive(ts.Path, gtsfStopsFileName, baseDir)
+	if err != nil {
+		log.Printf("Error unzipping %v while parsing input: %v ", p, err)
+		return err
+	}
+
+	// parse stops txt
+	stopsLocation, errParse := parseGTFSStops(p)
+	if errParse != nil {
+		log.Printf("Error parsing GTFS stops file: %v", err)
+		return errParse
+	}
+
+	for _, line := range *l {
+		for _, s := range line.Stops {
+			s.Location = stopsLocation[s.Id]
+		}
+	}
+	return nil
 }
 
-// ScheduleParser implements the signature of type Decorator.
+// parseGTFSStops parses the stops GTFS files producing a map with
+// stopId as key and Coordinates as value.
+func parseGTFSStops(filePath string) (map[string]Coordinates, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		log.Printf("Error reading file %v. Error: %v ", filePath, err)
+		return nil, err
+	}
+	defer f.Close()
+
+	csvr := csv.NewReader(f)
+	csvr.FieldsPerRecord = -1 // No checks
+	csvr.LazyQuotes = true
+
+	// Prepare containers
+	stops := make(map[string]Coordinates)
+	firstIgnored := false
+	for {
+		// Start reading csv
+		row, err := csvr.Read()
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+				break
+			}
+			log.Printf("Read csv %v", err)
+			return nil, err
+		}
+
+		if !firstIgnored {
+			firstIgnored = true
+			continue
+		}
+		stops[row[0]] = Coordinates{row[4], row[5]}
+	}
+
+	return stops, nil
+}
+
+// scheduleParser implements the signature of type Decorator.
 // It's responsible for decorating lines with the location of the stops.
 func scheduleParser(l *[]Line, ts TransitSource) error {
 	return errors.New("Not implemented")
@@ -115,7 +176,7 @@ func digestLineStopRow(row []string, lines map[string]Line, stops map[string]Sto
 	stopId := row[4]
 	_, stopPresent := stops[stopId]
 	if !stopPresent {
-		stops[stopId] = Stop{stopId, row[5], row[7], ""}
+		stops[stopId] = Stop{stopId, row[5], row[7], "", Coordinates{"", ""}}
 	}
 
 	lineId := row[0]

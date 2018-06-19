@@ -3,13 +3,14 @@ package transit
 import (
 	"archive/zip"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 )
 
-// UnzipFromArchive is a function that unzips a given file from the provided zip archive.
+// UnzipFromArchive is a function that unzips a file from the supplied zip archive.
 // The unzipped file is save to dest path.
-func UnzipFromArchive(archive, dest string) error {
+func UnzipFromArchive(archive, file, dest string) error {
 	r, err := zip.OpenReader(archive)
 	if err != nil {
 		return err
@@ -59,11 +60,13 @@ func UnzipFromArchive(archive, dest string) error {
 	}
 
 	for _, f := range r.File {
-		//		if f.Name == file {
-		err = extractAndWriteFile(f)
-		//		}
-		if err != nil {
-			return err
+		if f.Name == file {
+			log.Printf("%v found inside %v: unzipping", file, archive)
+			err = extractAndWriteFile(f)
+			if err != nil {
+				return err
+			}
+			break
 		}
 	}
 
