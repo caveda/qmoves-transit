@@ -102,9 +102,9 @@ func locationParser(l *[]Line, ts TransitSource) error {
 		return errParse
 	}
 
-	for _, line := range *l {
-		for _, s := range line.Stops {
-			s.Location = stopsLocation[s.Id]
+	for i, line := range *l {
+		for j, s := range line.Stops {
+			(*l)[i].Stops[j].Location = stopsLocation[s.Id]
 		}
 	}
 	return nil

@@ -15,7 +15,8 @@ type TransitSource struct {
 }
 
 type Coordinates struct {
-	lat, long string
+	Lat  string `json:"Lat,omitempty"`
+	Long string `json:"Long,omitempty"`
 }
 
 type Stop struct {
@@ -45,4 +46,11 @@ type Parser interface {
 	Digest(dataPath string) error
 	Lines() []Line
 	Stops(lineId string, direction string) []Stop
+}
+
+// Presenter is an interface implemented by formatter classes.
+// Exposes methods to transform lines into the presenting format, e.g. JSON
+type Presenter interface {
+	Format(l Line) (string, error)
+	FormatList(l []Line) (string, error)
 }

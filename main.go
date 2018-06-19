@@ -14,7 +14,7 @@ var bilboBus transit.Bilbobus
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Request received")
-	j, err := transit.Format(bilboBus.Lines())
+	j, err := transit.JsonPresenter{}.FormatList(bilboBus.Lines())
 	if err != nil {
 		http.Error(w, "Can't get lines", 500)
 		return
@@ -39,4 +39,6 @@ func prepare() {
 		transit.Download(s.Uri, s.Path)
 	}
 	bilboBus.Digest(sources)
+
+	transit.Publish(bilboBus.Lines(), "./gen", transit.JsonPresenter{})
 }
