@@ -28,6 +28,27 @@ func TestGetSources(t *testing.T) {
 	}
 }
 
+var getLineDirectionTestCases = []struct {
+	lineName, rawDirection      string // input
+	expectedLong, expectedShort string // expected result
+}{
+	{`ARANGOITI - PLAZA BIRIBILA`, `Arangoiti - Gran Via`, DirectionForward, DirectionForwardShortPrefix},
+	{`ARANGOITI - PLAZA BIRIBILA`, `Gran Via - Arangoiti`, DirectionBackward, DirectionBackwardShortPrefix},
+	{`PLAZA BIRIBILA - OTXARKOAGA`, `Plaza Biribila/GV  - Otxarkoaga`, DirectionForward, DirectionForwardShortPrefix},
+	{`PLAZA BIRIBILA - OTXARKOAGA`, `Otxarkoaga - Plaza Biribila/GV`, DirectionBackward, DirectionBackwardShortPrefix},
+	{`SAN MAMES - ARABELLA`, `San Mames - Arabella`, DirectionForward, DirectionForwardShortPrefix},
+	{`SAN MAMES - ARABELLA`, `Arabella - San Mames`, DirectionBackward, DirectionBackwardShortPrefix},
+}
+
+func TestGetLineDirection(t *testing.T) {
+	for _, tc := range getLineDirectionTestCases {
+		long, short := GetLineDirection(tc.lineName, tc.rawDirection)
+		if long != tc.expectedLong || short != tc.expectedShort {
+			t.Errorf("getLineDirection(%v,%v): expected (%v,%v), actual (%v,%v)", tc.lineName, tc.rawDirection, tc.expectedLong, tc.expectedShort, long, short)
+		}
+	}
+}
+
 func areEqual(a, b []TransitSource) bool {
 	if a == nil && b == nil {
 		return true

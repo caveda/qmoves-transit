@@ -6,6 +6,10 @@ package transit
 const SourceLines string = "Lines"
 const SourceSchedule string = "Schedule"
 const SourceLocation string = "Location"
+const DirectionForward string = "FORWARD"
+const DirectionBackward string = "BACKWARD"
+const DirectionForwardShortPrefix string = "I"
+const DirectionBackwardShortPrefix string = "V"
 
 // Types
 
@@ -29,6 +33,7 @@ type Stop struct {
 
 type Line struct {
 	Id        string `json:"Id,omitempty"`
+	Number    string `json:"Number,omitempty"`
 	Name      string `json:"Name,omitempty"`
 	Direction string `json:"Direction,omitempty"`
 	Stops     []Stop `json:"Stops,omitempty"`

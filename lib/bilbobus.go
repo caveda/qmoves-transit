@@ -18,8 +18,6 @@ type Bilbobus struct {
 
 // Constants
 const EnvNameBilbao string = "BILBAO_TRANSIT"
-const DirectionForward string = "FORWARD"
-const DirectionBackward string = "BACKWARD"
 const separator string = "-"
 const gtsfStopsFileName string = "stops.txt"
 
@@ -155,14 +153,17 @@ func scheduleParser(l *[]Line, ts TransitSource) error {
 	return errors.New("Not implemented")
 }
 
-func getLineDirection(name string, rawDirection string) string {
-	nameBegin := strings.TrimSpace(strings.Split(name, separator)[0])
-	directionBegin := strings.TrimSpace(strings.Split(rawDirection, separator)[0])
-	returnedDirection := DirectionBackward
+func GetLineDirection(name string, rawDirection string) (long string, short string) {
+	nameBegin := strings.ToUpper(strings.TrimSpace(strings.Split(name, separator)[0]))
+	directionBegin := strings.ToUpper(strings.TrimSpace(strings.Split(rawDirection, separator)[0]))
+	long = DirectionBackward
+	short = DirectionBackwardShortPrefix
 	if strings.Contains(directionBegin, nameBegin) {
-		returnedDirection = DirectionForward
+		long = DirectionForward
+		short = DirectionForwardShortPrefix
 	}
-	return returnedDirection
+
+	return long, short
 }
 
 func addStopToLine(lines map[string]Line, lineId string, s Stop) {
@@ -172,17 +173,17 @@ func addStopToLine(lines map[string]Line, lineId string, s Stop) {
 }
 
 func digestLineStopRow(row []string, lines map[string]Line, stops map[string]Stop) {
-
 	stopId := row[4]
 	_, stopPresent := stops[stopId]
 	if !stopPresent {
 		stops[stopId] = Stop{stopId, row[5], row[7], "", Coordinates{"", ""}}
 	}
 
-	lineId := row[0]
-	_, linePresent := lines[lineId]
-	if !linePresent {
-		lines[lineId] = Line{lineId, row[1], getLineDirection(row[1], row[2]), nil}
+	stopOrder := row[3]
+	direction, prefix := GetLineDirection(row[1], row[2])
+	lineId := row[0] + prefix
+	if stopOrder == "1" { // Every stop order equals to 1, we need to create a new line
+		lines[lineId] = Line{lineId, row[0], row[1], direction, nil}
 	}
 
 	addStopToLine(lines, lineId, stops[stopId])
