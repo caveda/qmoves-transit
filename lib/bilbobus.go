@@ -9,6 +9,8 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"golang.org/x/net/html/charset"
 )
 
 // Bilbobus is a parser of transit information of Bilbao bus agency.
@@ -207,9 +209,16 @@ func linesParser(l *[]Line, s TransitSource) error {
 	}
 	defer f.Close()
 
+	// Source file comes in encoded in ISO-8859/Windows-1252. Need to be transformed to UTF-8
+	r, err := charset.NewReader(f, "windows-1252")
+	if err != nil {
+		log.Printf("Error converting file content to utf-8. Error: %v ", err)
+		return err
+	}
+
 	log.Printf("File %v opened", s.Path)
 	// Process csv file
-	csvr := csv.NewReader(f)
+	csvr := csv.NewReader(r)
 	csvr.FieldsPerRecord = -1 // No checks
 	csvr.LazyQuotes = true
 	csvr.Comma = ';'
