@@ -32,7 +32,7 @@ func main() {
 }
 
 func prepare() {
-	setupEnvironment(transit.EnvNameBilbao, "bilbao_transit.dat")
+	setupEnvironment("./setupEnv.sh")
 	sources := bilboBus.GetSources()
 	for _, s := range sources {
 		log.Printf("Sources read: %v", s)

@@ -10,6 +10,18 @@ const DirectionForward string = "FORWARD"
 const DirectionBackward string = "BACKWARD"
 const DirectionForwardShortPrefix string = "I"
 const DirectionBackwardShortPrefix string = "V"
+const TokenLine string = "<LINEID>"
+const TokenSeason string = "<SEASON>"
+const TokenStop string = "<STOPID>"
+const TokenDirection string = "<DIRECTIONID>"
+const TokenDay string = "<DAYTYPE>"
+const SeasonWinter string = "IV"
+const SeasonSummer string = "VE"
+const WeekDayTypeId string = "1"
+const SaturdayTypeId string = "2"
+const SundayTypeId string = "3"
+const DirectionForwardNumber string = "1"
+const DirectionBackwardNumber string = "2"
 
 // Types
 
@@ -18,19 +30,30 @@ type TransitSource struct {
 	Path, Uri, Id string
 }
 
+// Location data (typically of a stop).
 type Coordinates struct {
 	Lat  string `json:"Lat,omitempty"`
 	Long string `json:"Long,omitempty"`
 }
 
+// Timetable stores the schedule per type of day.
+type Timetable struct {
+	Weekday  string `json:"Weekday,omitempty"`
+	Saturday string `json:"Saturday,omitempty"`
+	Sunday   string `json:"Sunday,omitempty"`
+}
+
+// Stop keeps the information of a (bus, metro,...) stop.
 type Stop struct {
 	Id          string      `json:"Id,omitempty"`
 	Name        string      `json:"Name,omitempty"`
 	Connections string      `json:"Connections,omitempty"`
-	Schedule    string      `json:"Schedule,omitempty"`
+	Schedule    Timetable   `json:"Schedule,omitempty"`
 	Location    Coordinates `json:"Location,omitempty"`
 }
 
+// Line represents a line of transport mean. Consists of
+// some data and the list of stops for the route of the line.
 type Line struct {
 	Id        string `json:"Id,omitempty"`
 	Number    string `json:"Number,omitempty"`
@@ -58,4 +81,14 @@ type Parser interface {
 type Presenter interface {
 	Format(l Line) (string, error)
 	FormatList(l []Line) (string, error)
+}
+
+// ToDirectionNumber returns the identifier that matches
+// the given direction string (either DirectionBackward or DirectionForward )
+func ToDirectionNumber(direction string) string {
+	id := DirectionForwardNumber
+	if direction == DirectionBackward {
+		id = DirectionBackwardNumber
+	}
+	return id
 }

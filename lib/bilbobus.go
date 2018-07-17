@@ -152,7 +152,13 @@ func parseGTFSStops(filePath string) (map[string]Coordinates, error) {
 // scheduleParser implements the signature of type Decorator.
 // It's responsible for decorating lines with the location of the stops.
 func scheduleParser(l *[]Line, ts TransitSource) error {
-	return errors.New("Not implemented")
+	for _, line := range *l {
+		for j, _ := range line.Stops {
+			log.Printf("Processing static schedule for line %v and stop %v", line.Id, line.Stops[j].Id)
+			FillScheduleForStop(&line.Stops[j], line, ts)
+		}
+	}
+	return nil
 }
 
 func GetLineDirection(name string, rawDirection string) (long string, short string) {
@@ -178,7 +184,7 @@ func digestLineStopRow(row []string, lines map[string]Line, stops map[string]Sto
 	stopId := row[4]
 	_, stopPresent := stops[stopId]
 	if !stopPresent {
-		stops[stopId] = Stop{stopId, row[5], row[7], "", Coordinates{"", ""}}
+		stops[stopId] = Stop{stopId, row[5], row[7], Timetable{"", "", ""}, Coordinates{"", ""}}
 	}
 
 	stopOrder := row[3]

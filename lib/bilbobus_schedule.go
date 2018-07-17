@@ -1,0 +1,119 @@
+package transit
+
+import (
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"path"
+	"regexp"
+	"strings"
+	"time"
+)
+
+// Constants
+const EnvNameBilbobusSummerStart string = "BILBOBUS_SUMMER_START"
+const EnvNameBilbobusSummerEnd string = "BILBOBUS_SUMMER_END"
+const scheduleRegExTemplate string = `(?m).*<a href="horario-estimado\?codLinea=` + TokenLine + `&amp;temporada=` + TokenSeason +
+	`&amp;servicio=\d{0,3}&amp;tipodia=` + TokenDay + `&amp;sentido=` + TokenDirection + `&amp;hora=.*">(.*)<`
+
+// FillScheduleForStop fetch the schedule data from ts for the given stop.
+// Fills out the passed Stop structure with the information fetched.
+func FillScheduleForStop(s *Stop, l Line, ts TransitSource) error {
+	u, err := buildScheduleUrl(ts.Uri, l.Number, s.Id)
+	if err != nil {
+		log.Printf("Error building the url for line %v and stop %v. Error: %v ", l.Number, s.Id, err)
+		return err
+	}
+
+	p := path.Join(path.Dir(ts.Path), "sched_"+l.Id+"_"+s.Id+".html")
+	Download(u, p)
+	err = parseScheduleFile(p, s, l)
+	return err
+}
+
+func parseScheduleFile(path string, s *Stop, l Line) error {
+	f, err := ioutil.ReadFile(path) // Read all
+	if err != nil {
+		log.Printf("Error opening file %v. Error: %v ", path, err)
+		return err
+	}
+
+	season, err := getSeason()
+	if err != nil {
+		log.Printf("Error figuring out the season. Error: %v ", err)
+		return err
+	}
+
+	days := []string{WeekDayTypeId, SaturdayTypeId, SundayTypeId}
+	for _, day := range days {
+		pattern := buildScheduleRegexPattern(l.Number, season, day, ToDirectionNumber(l.Direction))
+		regex, err := regexp.Compile(pattern)
+		if err != nil {
+			log.Printf("Error compiling schedule regex %v. Error: %v ", pattern, err)
+			return err
+		}
+		times := regex.FindAllStringSubmatch(string(f), -1)
+		if times == nil {
+			message := fmt.Sprintf("No static schedule found with pattern %v", pattern)
+			log.Printf(message)
+			return errors.New(message)
+		}
+		for _, t := range times {
+			time := string(t[1])
+			if day == WeekDayTypeId {
+				s.Schedule.Weekday += time + ","
+			} else if day == SaturdayTypeId {
+				s.Schedule.Saturday += time + ","
+			} else if day == SundayTypeId {
+				s.Schedule.Sunday += time + ","
+			}
+		}
+	}
+	return nil
+}
+
+func buildScheduleUrl(template, lineNumber, stopId string) (string, error) {
+	season, err := getSeason()
+	if err != nil {
+		return "", err
+	}
+	return strings.Replace(strings.Replace(strings.Replace(template,
+		TokenLine, lineNumber, 1),
+		TokenStop, stopId, 1),
+		TokenSeason, season, 1), nil
+}
+
+func buildScheduleRegexPattern(lineNumber, season, day, direction string) string {
+	return strings.Replace(strings.Replace(strings.Replace(strings.Replace(scheduleRegExTemplate,
+		TokenLine, lineNumber, 1),
+		TokenDay, day, 1),
+		TokenSeason, season, 1),
+		TokenDirection, direction, 1)
+}
+
+func getSeason() (string, error) {
+	summerStart := os.Getenv(EnvNameBilbobusSummerStart)
+	if len(summerStart) == 0 {
+		return "", errors.New(fmt.Sprintf("Warning: Env variable %v is empty!", EnvNameBilbobusSummerStart))
+	}
+	summerEnd := os.Getenv(EnvNameBilbobusSummerEnd)
+	if len(summerEnd) == 0 {
+		return "", errors.New(fmt.Sprintf("Warning: Env variable %v is empty!", EnvNameBilbobusSummerEnd))
+	}
+	startTime, err := time.Parse(time.RFC3339, summerStart)
+	if err != nil {
+		return "", err
+	}
+	endTime, err := time.Parse(time.RFC3339, summerEnd)
+	if err != nil {
+		return "", err
+	}
+	season := SeasonSummer
+	if time.Now().Before(startTime) || time.Now().After(endTime) {
+		season = SeasonWinter
+	}
+	log.Printf("Season is %v", season)
+	return season, nil
+}
