@@ -41,4 +41,5 @@ func prepare() {
 	bilboBus.Digest(sources)
 
 	transit.Publish(bilboBus.Lines(), "./gen", transit.JsonPresenter{})
+	log.Printf("Ready to serve transit information")
 }

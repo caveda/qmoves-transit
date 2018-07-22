@@ -60,14 +60,21 @@ func parseScheduleFile(path string, s *Stop, l Line) error {
 			log.Printf(message)
 			return errors.New(message)
 		}
-		for _, t := range times {
+		for i, t := range times {
+
+			// Last element does not have separator
+			separator := ""
+			if i < len(times)-1 {
+				separator = ","
+			}
+
 			time := string(t[1])
 			if day == WeekDayTypeId {
-				s.Schedule.Weekday += time + ","
+				s.Schedule.Weekday += time + separator
 			} else if day == SaturdayTypeId {
-				s.Schedule.Saturday += time + ","
+				s.Schedule.Saturday += time + separator
 			} else if day == SundayTypeId {
-				s.Schedule.Sunday += time + ","
+				s.Schedule.Sunday += time + separator
 			}
 		}
 	}

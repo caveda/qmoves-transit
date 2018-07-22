@@ -9,6 +9,7 @@ import (
 // Publish deploys lines in the correct format in path.
 // The format is determined by the presenter.
 func Publish(lines []Line, destPath string, p Presenter) error {
+	log.Printf("Publishing %d lines", len(lines))
 	os.MkdirAll(destPath, os.ModePerm)
 
 	for _, l := range lines {

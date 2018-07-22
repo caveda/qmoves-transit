@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 
 	"golang.org/x/net/html/charset"
 )
@@ -149,18 +150,6 @@ func parseGTFSStops(filePath string) (map[string]Coordinates, error) {
 	return stops, nil
 }
 
-// scheduleParser implements the signature of type Decorator.
-// It's responsible for decorating lines with the location of the stops.
-func scheduleParser(l *[]Line, ts TransitSource) error {
-	for _, line := range *l {
-		for j, _ := range line.Stops {
-			log.Printf("Processing static schedule for line %v and stop %v", line.Id, line.Stops[j].Id)
-			FillScheduleForStop(&line.Stops[j], line, ts)
-		}
-	}
-	return nil
-}
-
 func GetLineDirection(name string, rawDirection string) (long string, short string) {
 	nameBegin := strings.ToUpper(strings.TrimSpace(strings.Split(name, separator)[0]))
 	directionBegin := strings.ToUpper(strings.TrimSpace(strings.Split(rawDirection, separator)[0]))
@@ -258,4 +247,46 @@ func linesParser(l *[]Line, s TransitSource) error {
 
 	*l = toSlice(lines)
 	return nil
+}
+
+type JobSchedule struct {
+	s  *Stop
+	l  Line
+	ts TransitSource
+}
+
+// scheduleParser implements the signature of type Decorator.
+// It's responsible for decorating lines with the location of the stops.
+func scheduleParser(l *[]Line, ts TransitSource) error {
+	c := make(chan JobSchedule)
+	go scheduleMaster(c, l, ts)
+	collectSchedules(3, c)
+	return nil
+}
+
+func collectSchedules(workers int, c chan JobSchedule) {
+	var wg sync.WaitGroup
+	poolSize := 20
+	for i := 0; i < poolSize; i++ {
+		wg.Add(1)
+		go scheduleWorker(&wg, c)
+	}
+	wg.Wait()
+}
+
+func scheduleMaster(c chan JobSchedule, l *[]Line, ts TransitSource) {
+	for _, line := range *l {
+		for j, _ := range line.Stops {
+			c <- JobSchedule{&line.Stops[j], line, ts}
+		}
+	}
+	close(c)
+}
+
+func scheduleWorker(wg *sync.WaitGroup, c <-chan JobSchedule) {
+	defer wg.Done()
+	for job := range c {
+		log.Printf("Processing static schedule for line %v and stop %v", job.l.Id, job.s.Id)
+		FillScheduleForStop(job.s, job.l, job.ts)
+	}
 }
