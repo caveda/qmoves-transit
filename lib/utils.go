@@ -35,3 +35,12 @@ func CreateFile(path, content string) error {
 
 	return nil
 }
+
+// Exists returns true if the path exists, false otherwise.
+func Exists(path string) bool {
+	result := false
+	if _, err := os.Stat(path); err == nil {
+		result = true
+	}
+	return result
+}

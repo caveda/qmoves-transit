@@ -2,6 +2,11 @@
 // the library.
 package transit
 
+import (
+	"os"
+	"strconv"
+)
+
 // Consts
 const SourceLines string = "Lines"
 const SourceSchedule string = "Schedule"
@@ -22,6 +27,7 @@ const SaturdayTypeId string = "2"
 const SundayTypeId string = "3"
 const DirectionForwardNumber string = "1"
 const DirectionBackwardNumber string = "2"
+const EnvNameReuseLocalData string = "REUSE_TRANSIT_LOCAL_FILES"
 
 // Types
 
@@ -91,4 +97,16 @@ func ToDirectionNumber(direction string) string {
 		id = DirectionBackwardNumber
 	}
 	return id
+}
+
+// UseCachedData returns True if the locally cached data must be used
+// as data source for transit information.
+func UseCachedData() bool {
+	result := false
+	value := os.Getenv(EnvNameReuseLocalData)
+	b, err := strconv.ParseBool(value)
+	if err == nil {
+		result = b
+	}
+	return result
 }

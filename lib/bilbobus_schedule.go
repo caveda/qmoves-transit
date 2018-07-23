@@ -28,7 +28,9 @@ func FillScheduleForStop(s *Stop, l Line, ts TransitSource) error {
 	}
 
 	p := path.Join(path.Dir(ts.Path), "sched_"+l.Id+"_"+s.Id+".html")
-	Download(u, p)
+	if !UseCachedData() || !Exists(p) {
+		Download(u, p)
+	}
 	err = parseScheduleFile(p, s, l)
 	return err
 }
