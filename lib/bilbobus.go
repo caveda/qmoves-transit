@@ -7,9 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
-	"path"
 	"strings"
-	"sync"
 
 	"golang.org/x/net/html/charset"
 )
@@ -77,77 +75,12 @@ func getParser(s TransitSource) (Parse, error) {
 	case SourceLines:
 		return linesParser, nil
 	case SourceLocation:
-		return locationParser, nil
+		return LocationParser, nil
 	case SourceSchedule:
-		return scheduleParser, nil
+		return ScheduleParser, nil
 	default:
 		return nil, errors.New("Unknown source id " + s.Id)
 	}
-}
-
-// LocationParser implements the signature of type Decorator.
-// It's responsible for decorating lines with the location of the stops.
-func locationParser(l *[]Line, ts TransitSource) error {
-	baseDir := path.Dir(ts.Path)
-	p := path.Join(baseDir, gtsfStopsFileName)
-	err := UnzipFromArchive(ts.Path, gtsfStopsFileName, baseDir)
-	if err != nil {
-		log.Printf("Error unzipping %v while parsing input: %v ", p, err)
-		return err
-	}
-
-	// parse stops txt
-	stopsLocation, errParse := parseGTFSStops(p)
-	if errParse != nil {
-		log.Printf("Error parsing GTFS stops file: %v", err)
-		return errParse
-	}
-
-	for i, line := range *l {
-		for j, s := range line.Stops {
-			(*l)[i].Stops[j].Location = stopsLocation[s.Id]
-		}
-	}
-	return nil
-}
-
-// parseGTFSStops parses the stops GTFS files producing a map with
-// stopId as key and Coordinates as value.
-func parseGTFSStops(filePath string) (map[string]Coordinates, error) {
-	f, err := os.Open(filePath)
-	if err != nil {
-		log.Printf("Error reading file %v. Error: %v ", filePath, err)
-		return nil, err
-	}
-	defer f.Close()
-
-	csvr := csv.NewReader(f)
-	csvr.FieldsPerRecord = -1 // No checks
-	csvr.LazyQuotes = true
-
-	// Prepare containers
-	stops := make(map[string]Coordinates)
-	firstIgnored := false
-	for {
-		// Start reading csv
-		row, err := csvr.Read()
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-				break
-			}
-			log.Printf("Read csv %v", err)
-			return nil, err
-		}
-
-		if !firstIgnored {
-			firstIgnored = true
-			continue
-		}
-		stops[row[0]] = Coordinates{row[4], row[5]}
-	}
-
-	return stops, nil
 }
 
 func GetLineDirection(name string, rawDirection string) (long string, short string) {
@@ -180,7 +113,7 @@ func digestLineStopRow(row []string, lines map[string]Line, stops map[string]Sto
 	direction, prefix := GetLineDirection(row[1], row[2])
 	lineId := row[0] + prefix
 	if stopOrder == "1" { // Every stop order equals to 1, we need to create a new line
-		lines[lineId] = Line{lineId, row[0], row[1], direction, nil}
+		lines[lineId] = Line{lineId, row[0], row[1], direction, nil, nil}
 	}
 
 	addStopToLine(lines, lineId, stops[stopId])
@@ -247,46 +180,4 @@ func linesParser(l *[]Line, s TransitSource) error {
 
 	*l = toSlice(lines)
 	return nil
-}
-
-type JobSchedule struct {
-	s  *Stop
-	l  Line
-	ts TransitSource
-}
-
-// scheduleParser implements the signature of type Decorator.
-// It's responsible for decorating lines with the location of the stops.
-func scheduleParser(l *[]Line, ts TransitSource) error {
-	c := make(chan JobSchedule)
-	go scheduleMaster(c, l, ts)
-	collectSchedules(3, c)
-	return nil
-}
-
-func collectSchedules(workers int, c chan JobSchedule) {
-	var wg sync.WaitGroup
-	poolSize := 20
-	for i := 0; i < poolSize; i++ {
-		wg.Add(1)
-		go scheduleWorker(&wg, c)
-	}
-	wg.Wait()
-}
-
-func scheduleMaster(c chan JobSchedule, l *[]Line, ts TransitSource) {
-	for _, line := range *l {
-		for j, _ := range line.Stops {
-			c <- JobSchedule{&line.Stops[j], line, ts}
-		}
-	}
-	close(c)
-}
-
-func scheduleWorker(wg *sync.WaitGroup, c <-chan JobSchedule) {
-	defer wg.Done()
-	for job := range c {
-		log.Printf("Processing static schedule for line %v and stop %v", job.l.Id, job.s.Id)
-		FillScheduleForStop(job.s, job.l, job.ts)
-	}
 }

@@ -61,11 +61,12 @@ type Stop struct {
 // Line represents a line of transport mean. Consists of
 // some data and the list of stops for the route of the line.
 type Line struct {
-	Id        string `json:"Id,omitempty"`
-	Number    string `json:"Number,omitempty"`
-	Name      string `json:"Name,omitempty"`
-	Direction string `json:"Direction,omitempty"`
-	Stops     []Stop `json:"Stops,omitempty"`
+	Id        string        `json:"Id,omitempty"`
+	Number    string        `json:"Number,omitempty"`
+	Name      string        `json:"Name,omitempty"`
+	Direction string        `json:"Direction,omitempty"`
+	Stops     []Stop        `json:"Stops,omitempty"`
+	MapRoute  []Coordinates `json:"MapRoute,omitempty"`
 }
 
 // Parse is a type of function that receives a list of Lines and adds

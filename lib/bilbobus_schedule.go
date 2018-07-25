@@ -9,6 +9,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -18,9 +19,52 @@ const EnvNameBilbobusSummerEnd string = "BILBOBUS_SUMMER_END"
 const scheduleRegExTemplate string = `(?m).*<a href="horario-estimado\?codLinea=` + TokenLine + `&amp;temporada=` + TokenSeason +
 	`&amp;servicio=\d{0,3}&amp;tipodia=` + TokenDay + `&amp;sentido=` + TokenDirection + `&amp;hora=.*">(.*)<`
 
-// FillScheduleForStop fetch the schedule data from ts for the given stop.
+// Types
+type JobSchedule struct {
+	s  *Stop
+	l  Line
+	ts TransitSource
+}
+
+// ScheduleParser implements the signature of type Decorator.
+// It's responsible for decorating lines with the location of the stops.
+func ScheduleParser(l *[]Line, ts TransitSource) error {
+	c := make(chan JobSchedule)
+	go scheduleMaster(c, l, ts)
+	collectSchedules(3, c)
+	return nil
+}
+
+func collectSchedules(workers int, c chan JobSchedule) {
+	var wg sync.WaitGroup
+	poolSize := 20
+	for i := 0; i < poolSize; i++ {
+		wg.Add(1)
+		go scheduleWorker(&wg, c)
+	}
+	wg.Wait()
+}
+
+func scheduleMaster(c chan JobSchedule, l *[]Line, ts TransitSource) {
+	for _, line := range *l {
+		for j, _ := range line.Stops {
+			c <- JobSchedule{&line.Stops[j], line, ts}
+		}
+	}
+	close(c)
+}
+
+func scheduleWorker(wg *sync.WaitGroup, c <-chan JobSchedule) {
+	defer wg.Done()
+	for job := range c {
+		log.Printf("Processing static schedule for line %v and stop %v", job.l.Id, job.s.Id)
+		fillScheduleForStop(job.s, job.l, job.ts)
+	}
+}
+
+// fillScheduleForStop fetch the schedule data from ts for the given stop.
 // Fills out the passed Stop structure with the information fetched.
-func FillScheduleForStop(s *Stop, l Line, ts TransitSource) error {
+func fillScheduleForStop(s *Stop, l Line, ts TransitSource) error {
 	u, err := buildScheduleUrl(ts.Uri, l.Number, s.Id)
 	if err != nil {
 		log.Printf("Error building the url for line %v and stop %v. Error: %v ", l.Number, s.Id, err)
