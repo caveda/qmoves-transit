@@ -15,6 +15,7 @@ const DirectionForward string = "FORWARD"
 const DirectionBackward string = "BACKWARD"
 const DirectionForwardShortPrefix string = "I"
 const DirectionBackwardShortPrefix string = "V"
+
 const TokenLine string = "<LINEID>"
 const TokenSeason string = "<SEASON>"
 const TokenStop string = "<STOPID>"
@@ -29,7 +30,8 @@ const DirectionForwardNumber string = "1"
 const DirectionBackwardNumber string = "2"
 const EnvNameReuseLocalData string = "REUSE_TRANSIT_LOCAL_FILES"
 
-// Types
+// Globals
+var DirectionsPrefixes = [2]string{DirectionForwardShortPrefix, DirectionBackwardShortPrefix}
 
 // TransitSource tells what data a source has to have.
 type TransitSource struct {

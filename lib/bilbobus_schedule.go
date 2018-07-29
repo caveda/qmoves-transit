@@ -167,6 +167,5 @@ func getSeason() (string, error) {
 	if time.Now().Before(startTime) || time.Now().After(endTime) {
 		season = SeasonWinter
 	}
-	log.Printf("Season is %v", season)
 	return season, nil
 }
