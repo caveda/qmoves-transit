@@ -10,6 +10,10 @@ import (
 	"golang.org/x/net/html/charset"
 )
 
+// Globals to this file
+var currentLineDirection string
+var currentLinePrefixDirection string
+
 // LinesParser implements the signature of type Decorator.
 // It's responsible for creating the basic list of lines with stops.
 func LinesParser(l *[]Line, s TransitSource) error {
@@ -76,16 +80,17 @@ func addStopToLine(lines map[string]Line, lineId string, s Stop) {
 
 func digestLineStopRow(row []string, lines map[string]Line, stops map[string]Stop) {
 	stopId := row[4]
+
 	_, stopPresent := stops[stopId]
 	if !stopPresent {
 		stops[stopId] = Stop{stopId, row[5], row[7], Timetable{"", "", ""}, Coordinates{"", ""}}
 	}
 
-	stopOrder := row[3]
-	direction, prefix := GetLineDirection(row[1], row[2])
-	lineId := row[0] + prefix
-	if stopOrder == "1" { // Every stop order equals to 1, we need to create a new line
-		lines[lineId] = Line{lineId, row[0], row[1], direction, nil, nil}
+	lineId := row[0] + currentLinePrefixDirection
+	if row[3] == "1" { // Every stop order equals to 1, we need to create a new line
+		updateCurrentLineDirection(row[1], row[2], row[0], lines)
+		lineId = row[0] + currentLinePrefixDirection
+		lines[lineId] = Line{lineId, row[0], row[1], currentLineDirection, nil, nil}
 	}
 
 	addStopToLine(lines, lineId, stops[stopId])
@@ -116,9 +121,9 @@ func addDirectionToConnections(s Stop, lines map[string]Line, stopLineId string)
 	var connections []string
 	stopConnections := strings.Split(s.Connections, ",")
 	for _, c := range stopConnections {
-		for _, d := range DirectionsPrefixes {
+		for _, d := range Directions {
 			l, exists := lines[buildLineIdWithDirection(c, d)]
-			if exists && belongsToLine(s.Id, l) {
+			if exists && l.Id != stopLineId && belongsToLine(s.Id, l) {
 				connections = append(connections, buildLineIdWithDirection(c, d))
 				break
 			} else {
@@ -145,5 +150,22 @@ func belongsToLine(stopId string, l Line) bool {
 }
 
 func buildLineIdWithDirection(id, direction string) string {
-	return id + direction
+	return id + ToDirectionPrefix(direction)
+}
+
+func getDirectionByAppearance(id string, lines map[string]Line) (long string, short string) {
+	long = DirectionForward
+
+	if _, exists := lines[buildLineIdWithDirection(id, DirectionForward)]; exists {
+		long = DirectionBackward
+	}
+	return long, ToDirectionPrefix(long)
+}
+
+func updateCurrentLineDirection(name, rawDirection, id string, lines map[string]Line) {
+	var err error
+	currentLineDirection, currentLinePrefixDirection, err = GetLineDirection(name, rawDirection)
+	if err != nil {
+		currentLineDirection, currentLinePrefixDirection = getDirectionByAppearance(id, lines)
+	}
 }

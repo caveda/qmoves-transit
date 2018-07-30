@@ -31,6 +31,7 @@ const DirectionBackwardNumber string = "2"
 const EnvNameReuseLocalData string = "REUSE_TRANSIT_LOCAL_FILES"
 
 // Globals
+var Directions = [2]string{DirectionForward, DirectionBackward}
 var DirectionsPrefixes = [2]string{DirectionForwardShortPrefix, DirectionBackwardShortPrefix}
 
 // TransitSource tells what data a source has to have.
@@ -100,6 +101,16 @@ func ToDirectionNumber(direction string) string {
 		id = DirectionBackwardNumber
 	}
 	return id
+}
+
+// ToDirectionPrefix returns the prefix that matches
+// the given direction string (either DirectionBackward or DirectionForward )
+func ToDirectionPrefix(direction string) string {
+	p := DirectionForwardShortPrefix
+	if direction == DirectionBackward {
+		p = DirectionBackwardShortPrefix
+	}
+	return p
 }
 
 // UseCachedData returns True if the locally cached data must be used
