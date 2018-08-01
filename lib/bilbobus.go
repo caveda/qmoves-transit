@@ -79,24 +79,3 @@ func getParser(s TransitSource) (Parse, error) {
 		return nil, errors.New("Unknown source id " + s.Id)
 	}
 }
-
-func GetLineDirection(name string, rawDirection string) (long string, short string, err error) {
-	nameBegin := strings.ToUpper(strings.TrimSpace(strings.Split(name, separator)[0]))
-	directionBegin := strings.ToUpper(strings.TrimSpace(strings.Split(rawDirection, separator)[0]))
-	nameEnd := strings.ToUpper(strings.TrimSpace(strings.Split(name, separator)[1]))
-	directionEnd := strings.ToUpper(strings.TrimSpace(strings.Split(rawDirection, separator)[1]))
-	long = DirectionBackward
-	err = nil
-
-	// Check error control
-	if !(strings.Contains(directionEnd, nameEnd) || strings.Contains(directionBegin, nameBegin)) && !(strings.Contains(directionBegin, nameEnd) || strings.Contains(directionEnd, nameBegin)) {
-		err = errors.New("Error: Name and direction do not match. Direction: " + directionBegin + "," + directionEnd + " .Name: " + nameBegin + "," + nameEnd)
-		return "", "", err
-	}
-
-	if strings.Contains(directionBegin, nameBegin) {
-		long = DirectionForward
-	}
-
-	return long, ToDirectionPrefix(long), err
-}

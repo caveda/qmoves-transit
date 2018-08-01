@@ -28,30 +28,6 @@ func TestGetSources(t *testing.T) {
 	}
 }
 
-var getLineDirectionTestCases = []struct {
-	lineName, rawDirection      string // input
-	expectedLong, expectedShort string // expected result
-	expectedError               bool
-}{
-	{`ARANGOITI - PLAZA BIRIBILA`, `Arangoiti - Gran Via`, DirectionForward, DirectionForwardShortPrefix, false},
-	{`ARANGOITI - PLAZA BIRIBILA`, `Gran Via - Arangoiti`, DirectionBackward, DirectionBackwardShortPrefix, false},
-	{`PLAZA BIRIBILA - OTXARKOAGA`, `Plaza Biribila/GV  - Otxarkoaga`, DirectionForward, DirectionForwardShortPrefix, false},
-	{`PLAZA BIRIBILA - OTXARKOAGA`, `Otxarkoaga - Plaza Biribila/GV`, DirectionBackward, DirectionBackwardShortPrefix, false},
-	{`SAN MAMES - ARABELLA`, `San Mames - Arabella`, DirectionForward, DirectionForwardShortPrefix, false},
-	{`SAN MAMES - ARABELLA`, `Arabella - San Mames`, DirectionBackward, DirectionBackwardShortPrefix, false},
-	{`LA PE�A - PLAZA BIRIBILA`, `Zamakola168 - Ayala`, "", "", true},
-	{`LA PE�A - PLAZA BIRIBILA`, `Ayala - Zamakola168`, "", "", true},
-}
-
-func TestGetLineDirection(t *testing.T) {
-	for _, tc := range getLineDirectionTestCases {
-		long, short, err := GetLineDirection(tc.lineName, tc.rawDirection)
-		if long != tc.expectedLong || short != tc.expectedShort || err != nil != tc.expectedError {
-			t.Errorf("getLineDirection(%v,%v): expected (%v,%v,%v), actual (%v,%v,%v)", tc.lineName, tc.rawDirection, tc.expectedLong, tc.expectedShort, tc.expectedError, long, short, err)
-		}
-	}
-}
-
 func areEqual(a, b []TransitSource) bool {
 	if a == nil && b == nil {
 		return true

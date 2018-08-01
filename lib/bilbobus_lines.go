@@ -2,6 +2,7 @@ package transit
 
 import (
 	"encoding/csv"
+	"errors"
 	"io"
 	"log"
 	"os"
@@ -168,4 +169,32 @@ func updateCurrentLineDirection(name, rawDirection, id string, lines map[string]
 	if err != nil {
 		currentLineDirection, currentLinePrefixDirection = getDirectionByAppearance(id, lines)
 	}
+}
+
+func GetLineDirection(name string, rawDirection string) (long string, short string, err error) {
+	nameParts := strings.Split(name, separator)
+	directionParts := strings.Split(rawDirection, separator)
+	if len(nameParts) != 2 || len(directionParts) != 2 {
+		err = errors.New("Error: Name or direction could not be splitted in two chunks. Direction: " + rawDirection + " .Name: " + name)
+		return "", "", err
+	}
+
+	nameBegin := strings.ToUpper(strings.TrimSpace(nameParts[0]))
+	directionBegin := strings.ToUpper(strings.TrimSpace(directionParts[0]))
+	nameEnd := strings.ToUpper(strings.TrimSpace(nameParts[1]))
+	directionEnd := strings.ToUpper(strings.TrimSpace(directionParts[1]))
+	long = ""
+	err = nil
+
+	// Check error control
+	if directionEnd == nameEnd || directionBegin == nameBegin {
+		long = DirectionForward
+	} else if directionBegin == nameEnd || directionEnd == nameBegin {
+		long = DirectionBackward
+	} else {
+		err = errors.New("Error: Name and direction do not match. Direction: " + directionBegin + "," + directionEnd + " .Name: " + nameBegin + "," + nameEnd)
+		return "", "", err
+	}
+
+	return long, ToDirectionPrefix(long), err
 }
