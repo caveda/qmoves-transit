@@ -7,17 +7,21 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
+	"strconv"
 )
 
 // Bilbobus is a parser of transit information of Bilbao bus agency.
 type Bilbobus struct {
-	lines []Line
+	data TransitData
 }
 
 // Constants
 const EnvNameBilbao string = "BILBAO_TRANSIT"
 const separator string = "-"
 const gtsfStopsFileName string = "stops.txt"
+
+var version Version = Version{"1", strconv.FormatInt(time.Now().Unix(), 10)}
 
 // Read the data sources from the env var.
 // Returns the list of sources.
@@ -52,7 +56,13 @@ func (p *Bilbobus) Digest(sources []TransitSource) error {
 			log.Printf("Error getting parser for source %v: %v", s.Id, e)
 			continue
 		}
-		err = parser(&p.lines, s)
+		if s.Id == SourceDayLines {
+			err = parser(&p.data.dayLines, s)
+		} else if s.Id == SourceNightLines {
+			err = parser(&p.data.nightLines, s)
+		} else {
+			err = parser(&p.data.lines, s)
+		}
 		if err != nil {
 			log.Printf("Error while processing source %v from path %v. Error: %v ", s.Id, s.Path, err)
 			continue
@@ -62,8 +72,9 @@ func (p *Bilbobus) Digest(sources []TransitSource) error {
 }
 
 // Observer that returns the list of lines for this transit.
-func (p Bilbobus) Lines() []Line {
-	return p.lines
+func (p Bilbobus) Data() TransitData {
+	p.data.version = version
+	return p.data
 }
 
 // getParser returns the proper parser for the given transitSource.
@@ -75,6 +86,10 @@ func getParser(s TransitSource) (Parse, error) {
 		return LocationParser, nil
 	case SourceSchedule:
 		return ScheduleParser, nil
+	case SourceDayLines:
+		return LinesListParser, nil
+	case SourceNightLines:
+		return LinesListParser, nil
 	default:
 		return nil, errors.New("Unknown source id " + s.Id)
 	}

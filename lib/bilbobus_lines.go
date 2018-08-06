@@ -15,7 +15,7 @@ import (
 var currentLineDirection string
 var currentLinePrefixDirection string
 
-// LinesParser implements the signature of type Decorator.
+// LinesParser implements the signature of type Parse.
 // It's responsible for creating the basic list of lines with stops.
 func LinesParser(l *[]Line, s TransitSource) error {
 	f, err := os.Open(s.Path)
@@ -197,4 +197,57 @@ func GetLineDirection(name string, rawDirection string) (long string, short stri
 	}
 
 	return long, ToDirectionPrefix(long), err
+}
+
+// LinesListParser implements the signature of type Parse.
+// It's responsible for creating the list of daily/nightly lines.
+func LinesListParser(l *[]Line, s TransitSource) error {
+	f, err := os.Open(s.Path)
+	if err != nil {
+		log.Printf("Error reading %v. Error: %v ", s.Path, err)
+		return err
+	}
+	defer f.Close()
+
+	// Source file comes in encoded in ISO-8859/Windows-1252. Need to be transformed to UTF-8
+	r, err := charset.NewReader(f, "windows-1252")
+	if err != nil {
+		log.Printf("Error converting file content to utf-8. Error: %v ", err)
+		return err
+	}
+
+	log.Printf("File %v opened", s.Path)
+	// Process csv file
+	csvr := csv.NewReader(r)
+	csvr.FieldsPerRecord = -1 // No checks
+	csvr.LazyQuotes = true
+	csvr.Comma = ';'
+
+	// Prepare containers
+	lines := make(map[string]Line)
+	firstIgnored := false
+	for {
+		// Start reading csv
+		row, err := csvr.Read()
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+				break
+			}
+			log.Printf("Read csv %v", err)
+			return err
+		}
+
+		if !firstIgnored {
+			firstIgnored = true
+			continue
+		}
+
+		// Process each row
+		log.Printf("Processing row %v", row)
+		lines[row[0]] = Line{"", row[0], row[1], "", nil, nil}
+	}
+
+	*l = toSlice(lines)
+	return nil
 }

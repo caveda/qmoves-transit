@@ -14,21 +14,21 @@ var bilboBus transit.Bilbobus
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Request received")
-	j, err := transit.JsonPresenter{}.FormatList(bilboBus.Lines())
-	if err != nil {
-		http.Error(w, "Can't get lines", 500)
-		return
-	}
+	// j, err := transit.JsonPresenter{}.FormatList(bilboBus.Data().lines)
+	// if err != nil {
+	// 	http.Error(w, "Can't get lines", 500)
+	// 	return
+	// }
 
-	fmt.Fprintf(w, j)
+	// fmt.Fprintf(w, j)
 	return
 }
 
 func main() {
 	prepare()
-	http.HandleFunc("/", handler)
-
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	//http.HandleFunc("/", handler)
+	//
+	//log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
 func prepare() {
@@ -40,6 +40,6 @@ func prepare() {
 	}
 	bilboBus.Digest(sources)
 
-	transit.Publish(bilboBus.Lines(), "./gen", transit.JsonPresenter{})
-	log.Printf("Ready to serve transit information")
+	transit.Publish(bilboBus.Data(), "./gen", transit.JsonPresenter{})
+	log.Printf("Ready to serve the transit information")
 }

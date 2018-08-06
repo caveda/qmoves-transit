@@ -11,6 +11,8 @@ import (
 const SourceLines string = "Lines"
 const SourceSchedule string = "Schedule"
 const SourceLocation string = "Location"
+const SourceDayLines string = "DayLinesList"
+const SourceNightLines string = "NightLinesList"
 const DirectionForward string = "FORWARD"
 const DirectionBackward string = "BACKWARD"
 const DirectionForwardShortPrefix string = "I"
@@ -33,6 +35,20 @@ const EnvNameReuseLocalData string = "REUSE_TRANSIT_LOCAL_FILES"
 // Globals
 var Directions = [2]string{DirectionForward, DirectionBackward}
 var DirectionsPrefixes = [2]string{DirectionForwardShortPrefix, DirectionBackwardShortPrefix}
+
+// Bilbobus is a parser of transit information of Bilbao bus agency.
+type TransitData struct {
+	version    Version
+	lines      []Line
+	dayLines   []Line
+	nightLines []Line
+}
+
+// Location data (typically of a stop).
+type Version struct {
+	ver   string   `json:"Version,omitempty"`
+	timeStamp string `json:"Timestamp,omitempty"`
+}
 
 // TransitSource tells what data a source has to have.
 type TransitSource struct {
