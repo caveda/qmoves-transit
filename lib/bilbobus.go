@@ -21,7 +21,7 @@ const EnvNameBilbao string = "BILBAO_TRANSIT"
 const separator string = "-"
 const gtsfStopsFileName string = "stops.txt"
 
-var version Version = Version{"1", strconv.FormatInt(time.Now().Unix(), 10)}
+var version Metadata = Metadata{"1", strconv.FormatInt(time.Now().Unix(), 10)}
 
 // Read the data sources from the env var.
 // Returns the list of sources.

@@ -38,16 +38,17 @@ var DirectionsPrefixes = [2]string{DirectionForwardShortPrefix, DirectionBackwar
 
 // Bilbobus is a parser of transit information of Bilbao bus agency.
 type TransitData struct {
-	version    Version
+	version    Metadata
 	lines      []Line
 	dayLines   []Line
 	nightLines []Line
 }
 
-// Location data (typically of a stop).
-type Version struct {
-	ver   string   `json:"Version,omitempty"`
-	timeStamp string `json:"Timestamp,omitempty"`
+// Metadata contains meta-information about the data
+// provided, such as: last time data was updated, version, etc.
+type Metadata struct {
+	Version    string `json:"Version,omitempty"`
+	LastUpdate string `json:"LastUpdate,omitempty"`
 }
 
 // TransitSource tells what data a source has to have.
