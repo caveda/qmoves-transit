@@ -63,24 +63,24 @@ func publishRemote(td TransitData) error {
 		return err
 	}
 
-	basePath := "bilbobus/" + string(td.version.Version)
+	basePath := "Bilbobus/" + string(td.version.Version)
 
-	if err = postFullLines(client, ctx, td.lines, basePath+"/allLines"); err != nil {
+	if err = postFullLines(client, ctx, td.lines, basePath+"/AllLines"); err != nil {
 		return err
 	}
 	log.Printf("Published remotely %v full lines", len(td.lines))
 
-	if err = postLinesList(client, ctx, td.dayLines, basePath+"/dayLines"); err != nil {
+	if err = postLinesList(client, ctx, td.dayLines, basePath+"/DayLines"); err != nil {
 		return err
 	}
 	log.Printf("Published remotely %v day lines", len(td.dayLines))
 
-	if err = postLinesList(client, ctx, td.nightLines, basePath+"/nightLines"); err != nil {
+	if err = postLinesList(client, ctx, td.nightLines, basePath+"/NightLines"); err != nil {
 		return err
 	}
 	log.Printf("Published remotely %v night lines", len(td.nightLines))
 
-	if err = postMetadata(client, ctx, td.version, basePath+"/meta"); err != nil {
+	if err = postMetadata(client, ctx, td.version, basePath+"/Metadata"); err != nil {
 		return err
 	}
 	log.Printf("Published remotely version %v", td.version)
