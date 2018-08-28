@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	transit "github.com/caveda/qmoves-transit/lib"
-)
+	"github.com/caveda/qmoves-transit/lib"
+	)
 
 const downloadFolder string = "./download"
 
@@ -36,7 +36,10 @@ func prepare() {
 	sources := bilboBus.GetSources()
 	for _, s := range sources {
 		log.Printf("Sources read: %v", s)
-		transit.Download(s.Uri, s.Path)
+		if !transit.UseCachedData() || !transit.Exists(s.Path) {
+			transit.Download(s.Uri, s.Path)
+		}
+
 	}
 	bilboBus.Digest(sources)
 
