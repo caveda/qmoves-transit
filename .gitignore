@@ -21,3 +21,12 @@
 
 # environment scripts
 *Env.sh
+
+# app specifics
+debug
+main
+download/
+gen/
+
+# Goland IDe
+.idea/
