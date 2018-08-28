@@ -91,7 +91,8 @@ func digestLineStopRow(row []string, lines map[string]Line, stops map[string]Sto
 	if row[3] == "1" { // Every stop order equals to 1, we need to create a new line
 		updateCurrentLineDirection(row[1], row[2], row[0], lines)
 		lineId = row[0] + currentLinePrefixDirection
-		lines[lineId] = Line{lineId, row[0], row[1], currentLineDirection, nil, nil}
+		isNightly := false
+		lines[lineId] = Line{lineId, row[0], row[1], currentLineDirection, nil, nil,  &isNightly}
 	}
 
 	addStopToLine(lines, lineId, stops[stopId])
@@ -245,7 +246,8 @@ func LinesListParser(l *[]Line, s TransitSource) error {
 
 		// Process each row
 		log.Printf("Processing row %v", row)
-		lines[row[0]] = Line{"", row[0], row[1], "", nil, nil}
+		isNightly := false
+		lines[row[0]] = Line{"", row[0], row[1], "", nil, nil, &isNightly}
 	}
 
 	*l = toSlice(lines)

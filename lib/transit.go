@@ -87,6 +87,7 @@ type Line struct {
 	Direction string        `json:"Direction,omitempty"`
 	Stops     []Stop        `json:"Stops,omitempty"`
 	MapRoute  []Coordinates `json:"MapRoute,omitempty"`
+	IsNightLine *bool		`json:"IsNightLine,omitempty"`
 }
 
 // Parse is a type of function that receives a list of Lines and adds

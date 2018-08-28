@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 	"strconv"
+	"fmt"
 )
 
 // Bilbobus is a parser of transit information of Bilbao bus agency.
@@ -60,6 +61,10 @@ func (p *Bilbobus) Digest(sources []TransitSource) error {
 			err = parser(&p.data.dayLines, s)
 		} else if s.Id == SourceNightLines {
 			err = parser(&p.data.nightLines, s)
+			if err==nil && len(p.data.lines)>0{
+				// Tag nightly lines
+				tagNightlyLines(&p.data);
+			}
 		} else {
 			err = parser(&p.data.lines, s)
 		}
@@ -93,4 +98,25 @@ func getParser(s TransitSource) (Parse, error) {
 	default:
 		return nil, errors.New("Unknown source id " + s.Id)
 	}
+}
+
+// tagNightlyLines walk through the list of lines setting
+// to true those considered nightly
+func tagNightlyLines(t *TransitData) error {
+
+	// Precondition
+	if t.lines==nil || t.nightLines == nil || len(t.lines) <= 0 || len(t.nightLines) <= 0 {
+		message := fmt.Sprintf("Either lines or nightlines has no elements")
+		log.Printf(message)
+		return errors.New(message)
+	}
+
+	for _, nl := range t.nightLines {
+		for i, l := range t.lines {
+			if nl.Number==l.Number {
+				*(t.lines[i].IsNightLine) = true
+			}
+		}
+	}
+	return nil
 }
