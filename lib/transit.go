@@ -82,7 +82,8 @@ type Stop struct {
 // some data and the list of stops for the route of the line.
 type Line struct {
 	Id        string        `json:"Id,omitempty"`
-	Number    string        `json:"Number,omitempty"`
+	AgencyId  string		`json:"AgencyId,omitempty"`
+	Number    int       	`json:"Number,omitempty"`
 	Name      string        `json:"Name,omitempty"`
 	Direction string        `json:"Direction,omitempty"`
 	Stops     []Stop        `json:"Stops,omitempty"`

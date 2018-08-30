@@ -3,7 +3,8 @@ package transit
 import (
 	"os"
 	"path/filepath"
-)
+	"hash/crc32"
+	)
 
 // CurrentPath returns the absolute current path.
 func CurrentPath() string {
@@ -43,4 +44,9 @@ func Exists(path string) bool {
 		result = true
 	}
 	return result
+}
+
+func CRC32 (s string) int {
+	crc32q := crc32.MakeTable(0xD5828281)
+	return int(crc32.Checksum([]byte(s), crc32q))
 }

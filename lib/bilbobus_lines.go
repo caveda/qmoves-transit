@@ -9,15 +9,22 @@ import (
 	"strings"
 
 	"golang.org/x/net/html/charset"
+	"strconv"
 )
+
+// Constants
+const GeneratedBaseNumber int = 90000
 
 // Globals to this file
 var currentLineDirection string
 var currentLinePrefixDirection string
+var currentGeneratedNumberOrdinal int = 0
+
 
 // LinesParser implements the signature of type Parse.
 // It's responsible for creating the basic list of lines with stops.
 func LinesParser(l *[]Line, s TransitSource) error {
+	currentGeneratedNumberOrdinal=0
 	f, err := os.Open(s.Path)
 	if err != nil {
 		log.Printf("Error reading %v. Error: %v ", s.Path, err)
@@ -92,7 +99,7 @@ func digestLineStopRow(row []string, lines map[string]Line, stops map[string]Sto
 		updateCurrentLineDirection(row[1], row[2], row[0], lines)
 		lineId = row[0] + currentLinePrefixDirection
 		isNightly := false
-		lines[lineId] = Line{lineId, row[0], row[1], currentLineDirection, nil, nil,  &isNightly}
+		lines[lineId] = Line{lineId, row[0], toLineNumber(row[0]), row[1], currentLineDirection, nil, nil,  &isNightly}
 	}
 
 	addStopToLine(lines, lineId, stops[stopId])
@@ -203,6 +210,7 @@ func GetLineDirection(name string, rawDirection string) (long string, short stri
 // LinesListParser implements the signature of type Parse.
 // It's responsible for creating the list of daily/nightly lines.
 func LinesListParser(l *[]Line, s TransitSource) error {
+	currentGeneratedNumberOrdinal=0
 	f, err := os.Open(s.Path)
 	if err != nil {
 		log.Printf("Error reading %v. Error: %v ", s.Path, err)
@@ -247,9 +255,18 @@ func LinesListParser(l *[]Line, s TransitSource) error {
 		// Process each row
 		log.Printf("Processing row %v", row)
 		isNightly := false
-		lines[row[0]] = Line{"", row[0], row[1], "", nil, nil, &isNightly}
+		lines[row[0]] = Line{"", row[0],toLineNumber(row[0]), row[1], "", nil, nil, &isNightly}
 	}
 
 	*l = toSlice(lines)
 	return nil
+}
+
+
+func toLineNumber (s string) int {
+	i, err := strconv.Atoi(s)
+	if err!=nil {
+		i = CRC32(s)
+	}
+	return i
 }

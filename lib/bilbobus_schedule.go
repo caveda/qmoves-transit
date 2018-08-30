@@ -65,7 +65,7 @@ func scheduleWorker(wg *sync.WaitGroup, c <-chan JobSchedule) {
 // fillScheduleForStop fetch the schedule data from ts for the given stop.
 // Fills out the passed Stop structure with the information fetched.
 func fillScheduleForStop(s *Stop, l Line, ts TransitSource) error {
-	u, err := buildScheduleUrl(ts.Uri, l.Number, s.Id)
+	u, err := buildScheduleUrl(ts.Uri, l.AgencyId, s.Id)
 	if err != nil {
 		log.Printf("Error building the url for line %v and stop %v. Error: %v ", l.Number, s.Id, err)
 		return err
@@ -94,7 +94,7 @@ func parseScheduleFile(path string, s *Stop, l Line) error {
 
 	days := []string{WeekDayTypeId, SaturdayTypeId, SundayTypeId}
 	for _, day := range days {
-		pattern := buildScheduleRegexPattern(l.Number, season, day, ToDirectionNumber(l.Direction))
+		pattern := buildScheduleRegexPattern(l.AgencyId, season, day, ToDirectionNumber(l.Direction))
 		regex, err := regexp.Compile(pattern)
 		if err != nil {
 			log.Printf("Error compiling schedule regex %v. Error: %v ", pattern, err)
