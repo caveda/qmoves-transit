@@ -3,4 +3,4 @@
 
 # qmoves-transit
 
-Server of public transit data.
+An application to collect and process data from multiple transit feeds that produces easy-to-consume transit information.
