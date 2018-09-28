@@ -73,6 +73,9 @@ func (p *Bilbobus) Digest(sources []TransitSource) error {
 			continue
 		}
 	}
+
+	// All sources processed. Add the list of stops
+	p.data.stops, _ = extractStops(p.data.lines)
 	return nil
 }
 
@@ -119,4 +122,40 @@ func tagNightlyLines(t *TransitData) error {
 		}
 	}
 	return nil
+}
+
+// extractStops explores the supplied transit data to fill out
+// the list of stops from the rest of the information contained.
+func extractStops (l []Line) ([]Stop, error){
+	stops := make(map[string]Stop)
+	for _, line := range l {
+		for _, s := range line.Stops {
+			_, stopPresent := stops[s.Id]
+			if !stopPresent {
+				s.Connections = addLineIdToConnections(s.Connections, line.Id)
+				stops[s.Id] = s
+			}
+		}
+	}
+
+	return toStopSlice(stops), nil
+}
+
+func addLineIdToConnections (connections string, newLineId string) string {
+
+	if len(connections)!=0 {
+		connections += ","
+	}
+	connections+=newLineId
+	return connections
+}
+
+func toStopSlice(m map[string]Stop) []Stop {
+	v := make([]Stop, len(m))
+	index := 0
+	for _, value := range m {
+		v[index] = value
+		index++
+	}
+	return v
 }

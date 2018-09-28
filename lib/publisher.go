@@ -80,6 +80,11 @@ func publishRemote(td TransitData) error {
 	}
 	log.Printf("Published remotely %v night lines", len(td.nightLines))
 
+	if err = postStopList(client, ctx, td.stops, basePath+"/Stops"); err != nil {
+		return err
+	}
+	log.Printf("Published remotely %v stop list", len(td.stops))
+
 	if err = postMetadata(client, ctx, td.version, basePath+"/Metadata"); err != nil {
 		return err
 	}
@@ -110,6 +115,14 @@ func postFullLines(c *db.Client, ctx context.Context, lines []Line, path string)
 			log.Printf("Error publishing line %v : %v", l.Id, err)
 			return err
 		}
+	}
+	return nil
+}
+
+func postStopList(c *db.Client, ctx context.Context, stops []Stop, path string) error {
+	if err := c.NewRef(path).Set(ctx, stops); err != nil {
+		log.Printf("Error publishing stopList at %v : %v", path, err)
+		return err
 	}
 	return nil
 }

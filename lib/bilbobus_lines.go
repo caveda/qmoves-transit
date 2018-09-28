@@ -48,7 +48,7 @@ func LinesParser(l *[]Line, s TransitSource) error {
 
 	// Prepare containers
 	lines := make(map[string]Line)
-	stops := make(map[string]Stop)
+	stops := make(map[string]*Stop)
 
 	firstIgnored := false
 	for {
@@ -73,7 +73,7 @@ func LinesParser(l *[]Line, s TransitSource) error {
 		digestLineStopRow(row, lines, stops)
 	}
 
-	*l = toSlice(lines)
+	*l = toLineSlice(lines)
 
 	decorateConnections(l, lines)
 
@@ -86,12 +86,12 @@ func addStopToLine(lines map[string]Line, lineId string, s Stop) {
 	lines[lineId] = line
 }
 
-func digestLineStopRow(row []string, lines map[string]Line, stops map[string]Stop) {
+func digestLineStopRow(row []string, lines map[string]Line, stops map[string]*Stop) {
 	stopId := row[4]
 
 	_, stopPresent := stops[stopId]
 	if !stopPresent {
-		stops[stopId] = Stop{stopId, row[5], row[7], Timetable{"", "", ""}, Coordinates{"", ""}}
+		stops[stopId] = &Stop{stopId, row[5], row[7], Timetable{"", "", ""}, Coordinates{"", ""}}
 	}
 
 	lineId := row[0] + currentLinePrefixDirection
@@ -102,10 +102,10 @@ func digestLineStopRow(row []string, lines map[string]Line, stops map[string]Sto
 		lines[lineId] = Line{lineId, row[0], toLineNumber(row[0]), row[1], currentLineDirection, nil, nil,  &isNightly}
 	}
 
-	addStopToLine(lines, lineId, stops[stopId])
+	addStopToLine(lines, lineId, *stops[stopId])
 }
 
-func toSlice(m map[string]Line) []Line {
+func toLineSlice(m map[string]Line) []Line {
 	v := make([]Line, len(m))
 	index := 0
 	for _, value := range m {
@@ -114,6 +114,8 @@ func toSlice(m map[string]Line) []Line {
 	}
 	return v
 }
+
+
 
 func decorateConnections(lineList *[]Line, linesMap map[string]Line) error {
 	for _, l := range *lineList {
@@ -258,7 +260,7 @@ func LinesListParser(l *[]Line, s TransitSource) error {
 		lines[row[0]] = Line{"", row[0],toLineNumber(row[0]), row[1], "", nil, nil, &isNightly}
 	}
 
-	*l = toSlice(lines)
+	*l = toLineSlice(lines)
 	return nil
 }
 
