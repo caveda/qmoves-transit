@@ -94,10 +94,10 @@ func digestLineStopRow(row []string, lines map[string]Line, stops map[string]*St
 		stops[stopId] = &Stop{stopId, row[5], row[7], Timetable{"", "", ""}, Coordinates{"", ""}}
 	}
 
-	lineId := row[0] + currentLinePrefixDirection
+	lineId := buildLineIdWithDirectionPrefix(row[0], currentLinePrefixDirection)
 	if row[3] == "1" { // Every stop order equals to 1, we need to create a new line
 		updateCurrentLineDirection(row[1], row[2], row[0], lines)
-		lineId = row[0] + currentLinePrefixDirection
+		lineId = buildLineIdWithDirectionPrefix(row[0],currentLinePrefixDirection)
 		isNightly := false
 		lines[lineId] = Line{lineId, row[0], toLineNumber(row[0]), row[1], currentLineDirection, nil, nil,  &isNightly}
 	}
@@ -130,7 +130,7 @@ func decorateConnections(lineList *[]Line, linesMap map[string]Line) error {
 
 func addDirectionToConnections(s Stop, lines map[string]Line, stopLineId string) string {
 	var connections []string
-	stopConnections := strings.Split(s.Connections, ",")
+	stopConnections := strings.Split(s.Connections, " ")
 	for _, c := range stopConnections {
 		for _, d := range Directions {
 			l, exists := lines[buildLineIdWithDirection(c, d)]
@@ -142,7 +142,7 @@ func addDirectionToConnections(s Stop, lines map[string]Line, stopLineId string)
 			}
 		}
 	}
-	result := strings.Join(connections, ",")
+	result := strings.Join(connections, " ")
 	if len(connections) != len(stopConnections) {
 		log.Printf("Error: Could not determined direction for all connections. %v - %v. Expected: %v. Got: %v", stopLineId, s.Id, s.Connections, result)
 	}
@@ -161,7 +161,11 @@ func belongsToLine(stopId string, l Line) bool {
 }
 
 func buildLineIdWithDirection(id, direction string) string {
-	return id + ToDirectionPrefix(direction)
+	return buildLineIdWithDirectionPrefix(id, ToDirectionPrefix(direction))
+}
+
+func buildLineIdWithDirectionPrefix(id, directionPrefix string) string {
+	return directionPrefix+id
 }
 
 func getDirectionByAppearance(id string, lines map[string]Line) (long string, short string) {
