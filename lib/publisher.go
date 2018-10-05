@@ -94,6 +94,7 @@ func publishRemote(td TransitData) error {
 }
 
 func postLinesList(c *db.Client, ctx context.Context, lines []Line, path string) error {
+	c.NewRef(path).Delete(ctx)
 	if err := c.NewRef(path).Set(ctx, lines); err != nil {
 		log.Printf("Error publishing lineList at %v : %v", path, err)
 		return err
@@ -102,6 +103,7 @@ func postLinesList(c *db.Client, ctx context.Context, lines []Line, path string)
 }
 
 func postMetadata(c *db.Client, ctx context.Context, version Metadata, path string) error {
+	c.NewRef(path).Delete(ctx)
 	if err := c.NewRef(path).Set(ctx, version); err != nil {
 		log.Printf("Error publishing version %v : %v", version, err)
 		return err
@@ -110,6 +112,7 @@ func postMetadata(c *db.Client, ctx context.Context, version Metadata, path stri
 }
 
 func postFullLines(c *db.Client, ctx context.Context, lines []Line, path string) error {
+	c.NewRef(path).Delete(ctx)
 	for _, l := range lines {
 		if err := c.NewRef(path+"/"+l.Id).Set(ctx, l); err != nil {
 			log.Printf("Error publishing line %v : %v", l.Id, err)
@@ -120,6 +123,7 @@ func postFullLines(c *db.Client, ctx context.Context, lines []Line, path string)
 }
 
 func postStopList(c *db.Client, ctx context.Context, stops []Stop, path string) error {
+	c.NewRef(path).Delete(ctx)
 	if err := c.NewRef(path).Set(ctx, stops); err != nil {
 		log.Printf("Error publishing stopList at %v : %v", path, err)
 		return err
