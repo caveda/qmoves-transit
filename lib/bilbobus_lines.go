@@ -19,12 +19,13 @@ const GeneratedBaseNumber int = 90000
 var currentLineDirection string
 var currentLinePrefixDirection string
 var currentGeneratedNumberOrdinal int = 0
-
+var lineNumberIdMap map[string]int
 
 // LinesParser implements the signature of type Parse.
 // It's responsible for creating the basic list of lines with stops.
 func LinesParser(l *[]Line, s TransitSource) error {
 	currentGeneratedNumberOrdinal=0
+	lineNumberIdMap = make(map[string]int)
 	f, err := os.Open(s.Path)
 	if err != nil {
 		log.Printf("Error reading %v. Error: %v ", s.Path, err)
@@ -270,9 +271,17 @@ func LinesListParser(l *[]Line, s TransitSource) error {
 
 
 func toLineNumber (s string) int {
-	i, err := strconv.Atoi(s)
+	var n int
+	n, err := strconv.Atoi(s)
 	if err!=nil {
-		i = CRC32(s)
+		i, exists := lineNumberIdMap[s]
+		if !exists {
+			currentGeneratedNumberOrdinal++
+			n = GeneratedBaseNumber + currentGeneratedNumberOrdinal
+			lineNumberIdMap[s]=n
+		} else {
+			n=i
+		}
 	}
-	return i
+	return n
 }
