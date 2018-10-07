@@ -50,3 +50,12 @@ func CRC32 (s string) int {
 	crc32q := crc32.MakeTable(0xD5828281)
 	return int(crc32.Checksum([]byte(s), crc32q))
 }
+
+func IsFileSizeGreaterThanZero (p string) bool {
+	fi, e := os.Stat(p);
+	if e != nil {
+		return false
+	}
+	// get the size
+	return fi.Size()>0
+}

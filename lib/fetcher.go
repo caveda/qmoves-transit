@@ -11,13 +11,17 @@ import (
 	"path/filepath"
 
 	"github.com/secsy/goftp"
+	"log"
 )
+
+var MaxDownloadRetries int = 10
 
 // Pulls down the content of the provided url and stores in filepath.
 // If anything goes wrong it returns an error otherwise nil
-func Download(address string, fileFullPath string) (err error) {
+func Download(address string, fileFullPath string, validateFunc func(string)bool) (err error) {
 	// Create the folder
 	os.MkdirAll(filepath.Dir(fileFullPath), os.ModePerm)
+
 
 	// Sources may have different protocols
 	u, err := url.Parse(address)
@@ -25,14 +29,20 @@ func Download(address string, fileFullPath string) (err error) {
 		return err
 	}
 
-	if u.Scheme == "http" || u.Scheme == "https" {
-		err = fetchHTTP(u, fileFullPath)
-	} else if u.Scheme == "ftp" {
-		err = fetchFTP(u, fileFullPath)
-	} else {
-		err = fmt.Errorf("Unknown protocol for url %v", address)
+	retries := 0
+	validated := false
+	for retries<=MaxDownloadRetries && !validated {
+		retries++
+		if u.Scheme == "http" || u.Scheme == "https" {
+			err = fetchHTTP(u, fileFullPath)
+		} else if u.Scheme == "ftp" {
+			err = fetchFTP(u, fileFullPath)
+		} else {
+			err = fmt.Errorf("Unknown protocol for url %v", address)
+		}
+		validated = validateFunc(fileFullPath)
+		log.Printf("Download: validation of %v is %v", fileFullPath, validated)
 	}
-
 	return err
 }
 

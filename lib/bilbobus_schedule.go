@@ -1,15 +1,15 @@
 package transit
 
 import (
-	"errors"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
-	"path"
-	"regexp"
-	"strings"
 	"sync"
+	"log"
+	"path"
+	"io/ioutil"
+	"regexp"
+	"fmt"
+	"errors"
+	"strings"
+	"os"
 	"time"
 )
 
@@ -18,6 +18,7 @@ const EnvNameBilbobusSummerStart string = "BILBOBUS_SUMMER_START"
 const EnvNameBilbobusSummerEnd string = "BILBOBUS_SUMMER_END"
 const scheduleRegExTemplate string = `(?m).*<a href="horario-estimado\?codLinea=` + TokenLine + `&amp;temporada=` + TokenSeason +
 	`&amp;servicio=\d{0,3}&amp;tipodia=` + TokenDay + `&amp;sentido=` + TokenDirection + `&amp;hora=.*">(.*)<`
+const scheduleValidationFileRegEx string = `(?m).*<a href="horario-estimado\?codLinea=`
 
 // Types
 type JobSchedule struct {
@@ -37,7 +38,7 @@ func ScheduleParser(l *[]Line, ts TransitSource) error {
 
 func collectSchedules(workers int, c chan JobSchedule) {
 	var wg sync.WaitGroup
-	poolSize := 20
+	poolSize := 5
 	for i := 0; i < poolSize; i++ {
 		wg.Add(1)
 		go scheduleWorker(&wg, c)
@@ -73,7 +74,7 @@ func fillScheduleForStop(s *Stop, l Line, ts TransitSource) error {
 
 	p := path.Join(path.Dir(ts.Path), "sched_"+l.Id+"_"+s.Id+".html")
 	if !UseCachedData() || !Exists(p) {
-		Download(u, p)
+		Download(u, p, validateScheduleFile)
 	}
 	err = parseScheduleFile(p, s, l)
 	return err
@@ -81,7 +82,7 @@ func fillScheduleForStop(s *Stop, l Line, ts TransitSource) error {
 
 func parseScheduleFile(path string, s *Stop, l Line) error {
 	f, err := ioutil.ReadFile(path) // Read all
-	if err != nil {
+	if err != nil || len(f) == 0 {
 		log.Printf("Error opening file %v. Error: %v ", path, err)
 		return err
 	}
@@ -102,9 +103,9 @@ func parseScheduleFile(path string, s *Stop, l Line) error {
 		}
 		times := regex.FindAllStringSubmatch(string(f), -1)
 		if times == nil {
-			message := fmt.Sprintf("No static schedule found with pattern %v", pattern)
+			message := fmt.Sprintf("No static schedule found. Line: %v. Stop: %v. Day %v. Season: %v", l.Id, s.Id, day, season)
 			log.Printf(message)
-			return errors.New(message)
+			continue
 		}
 		for i, t := range times {
 
@@ -124,6 +125,15 @@ func parseScheduleFile(path string, s *Stop, l Line) error {
 			}
 		}
 	}
+
+	if len(s.Schedule.Friday)==0 {
+		s.Schedule.Friday = s.Schedule.Weekday
+	}
+
+	if len(s.Schedule.MondayToThrusday)==0 {
+		s.Schedule.MondayToThrusday = s.Schedule.Weekday
+	}
+
 	return nil
 }
 
@@ -168,4 +178,39 @@ func getSeason() (string, error) {
 		season = SeasonWinter
 	}
 	return season, nil
+}
+
+
+func validateScheduleFile (p string) bool {
+	fi, err := os.Stat(p)
+	if err != nil {
+		log.Printf("validateScheduleFile: Error gettings stats file %v. Error: %v ", p, err)
+		return false
+	}
+
+	// checks the size
+	if fi.Size()==0 {
+		log.Printf("validateScheduleFile: file %v has zero size", p)
+		return false
+	}
+
+	f, err := ioutil.ReadFile(p) // Read all
+	if err != nil || len(f) == 0 {
+		log.Printf("validateScheduleFile: Error opening file %v. Error: %v ", p, err)
+		return false
+	}
+
+	regex, err := regexp.Compile(scheduleValidationFileRegEx)
+	if err != nil {
+		log.Printf("validateScheduleFile: Error compiling schedule regex %v. Error: %v ", scheduleValidationFileRegEx, err)
+		return false
+	}
+	times := regex.FindAllStringSubmatch(string(f), -1)
+	if times == nil {
+		log.Printf("validateScheduleFile: No static schedule found with pattern %v", scheduleValidationFileRegEx)
+		return false
+	}
+
+	// Valid
+	return true
 }

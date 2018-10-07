@@ -66,6 +66,8 @@ type Coordinates struct {
 // Timetable stores the schedule per type of day.
 type Timetable struct {
 	Weekday  string `json:"Weekday,omitempty"`
+	MondayToThrusday string `json:"MondayToThrusday,omitempty"`
+	Friday   string `json:"Friday,omitempty"`
 	Saturday string `json:"Saturday,omitempty"`
 	Sunday   string `json:"Sunday,omitempty"`
 }

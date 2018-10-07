@@ -37,7 +37,7 @@ func prepare() {
 	for _, s := range sources {
 		log.Printf("Sources read: %v", s)
 		if !transit.UseCachedData() || !transit.Exists(s.Path) {
-			transit.Download(s.Uri, s.Path)
+			transit.Download(s.Uri, s.Path, transit.IsFileSizeGreaterThanZero)
 		}
 
 	}

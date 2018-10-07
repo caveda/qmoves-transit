@@ -92,7 +92,7 @@ func digestLineStopRow(row []string, lines map[string]Line, stops map[string]*St
 
 	_, stopPresent := stops[stopId]
 	if !stopPresent {
-		stops[stopId] = &Stop{stopId, row[5], row[7], Timetable{"", "", ""}, Coordinates{"", ""}}
+		stops[stopId] = &Stop{stopId, row[5], row[7], Timetable{"", "", "", "", ""}, Coordinates{"", ""}}
 	}
 
 	lineId := buildLineIdWithDirectionPrefix(row[0], currentLinePrefixDirection)
