@@ -14,12 +14,15 @@ import (
 
 // Constants
 const GeneratedBaseNumber int = 90000
+const ConnectionsInputSeparator string = ","
+const ConnectionsOutputSeparator string = " "
 
 // Globals to this file
 var currentLineDirection string
 var currentLinePrefixDirection string
 var currentGeneratedNumberOrdinal int = 0
 var lineNumberIdMap map[string]int
+
 
 // LinesParser implements the signature of type Parse.
 // It's responsible for creating the basic list of lines with stops.
@@ -131,19 +134,19 @@ func decorateConnections(lineList *[]Line, linesMap map[string]Line) error {
 
 func addDirectionToConnections(s Stop, lines map[string]Line, stopLineId string) string {
 	var connections []string
-	stopConnections := strings.Split(s.Connections, " ")
+	stopConnections := strings.Split(s.Connections, ConnectionsInputSeparator)
 	for _, c := range stopConnections {
 		for _, d := range Directions {
 			l, exists := lines[buildLineIdWithDirection(c, d)]
-			if exists && l.Id != stopLineId && belongsToLine(s.Id, l) {
+			if !exists {
+				log.Printf("Error: Line %v not mapped", buildLineIdWithDirection(c, d))
+			} else if belongsToLine(s.Id, l) {
 				connections = append(connections, buildLineIdWithDirection(c, d))
 				break
-			} else {
-				log.Printf("Error: Line %v not mapped", buildLineIdWithDirection(c, d))
 			}
 		}
 	}
-	result := strings.Join(connections, " ")
+	result := strings.Join(connections, ConnectionsOutputSeparator)
 	if len(connections) != len(stopConnections) {
 		log.Printf("Error: Could not determined direction for all connections. %v - %v. Expected: %v. Got: %v", stopLineId, s.Id, s.Connections, result)
 	}
