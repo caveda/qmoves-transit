@@ -117,21 +117,17 @@ func parseScheduleFile(path string, s *Stop, l Line) error {
 
 			time := string(t[1])
 			if day == WeekDayTypeId {
-				s.Schedule.Weekday += time + separator
+				if *l.IsNightLine {
+					s.Schedule.Friday += time + separator
+				}else {
+					s.Schedule.Weekday += time + separator
+				}
 			} else if day == SaturdayTypeId {
 				s.Schedule.Saturday += time + separator
 			} else if day == SundayTypeId {
 				s.Schedule.Sunday += time + separator
 			}
 		}
-	}
-
-	if len(s.Schedule.Friday)==0 {
-		s.Schedule.Friday = s.Schedule.Weekday
-	}
-
-	if len(s.Schedule.MondayToThrusday)==0 {
-		s.Schedule.MondayToThrusday = s.Schedule.Weekday
 	}
 
 	return nil
