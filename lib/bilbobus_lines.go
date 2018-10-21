@@ -103,7 +103,7 @@ func digestLineStopRow(row []string, lines map[string]Line, stops map[string]*St
 		updateCurrentLineDirection(row[1], row[2], row[0], lines)
 		lineId = buildLineIdWithDirectionPrefix(row[0],currentLinePrefixDirection)
 		isNightly := false
-		lines[lineId] = Line{lineId, row[0], toLineNumber(row[0]), row[1], currentLineDirection, nil, nil,  &isNightly}
+		lines[lineId] = Line{lineId, row[0], toLineNumber(row[0]), row[2], currentLineDirection, nil, nil,  &isNightly}
 	}
 
 	addStopToLine(lines, lineId, *stops[stopId])
