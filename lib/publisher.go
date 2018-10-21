@@ -70,16 +70,6 @@ func publishRemote(td TransitData) error {
 	}
 	log.Printf("Published remotely %v full lines", len(td.lines))
 
-	if err = postLinesList(client, ctx, td.dayLines, basePath+"/DayLines"); err != nil {
-		return err
-	}
-	log.Printf("Published remotely %v day lines", len(td.dayLines))
-
-	if err = postLinesList(client, ctx, td.nightLines, basePath+"/NightLines"); err != nil {
-		return err
-	}
-	log.Printf("Published remotely %v night lines", len(td.nightLines))
-
 	if err = postStopList(client, ctx, td.stops, basePath+"/Stops"); err != nil {
 		return err
 	}
@@ -93,14 +83,6 @@ func publishRemote(td TransitData) error {
 	return nil
 }
 
-func postLinesList(c *db.Client, ctx context.Context, lines []Line, path string) error {
-	c.NewRef(path).Delete(ctx)
-	if err := c.NewRef(path).Set(ctx, lines); err != nil {
-		log.Printf("Error publishing lineList at %v : %v", path, err)
-		return err
-	}
-	return nil
-}
 
 func postMetadata(c *db.Client, ctx context.Context, version Metadata, path string) error {
 	c.NewRef(path).Delete(ctx)
