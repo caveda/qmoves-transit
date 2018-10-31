@@ -21,8 +21,9 @@ type Bilbobus struct {
 const EnvNameBilbao string = "BILBAO_TRANSIT"
 const separator string = "-"
 const gtsfStopsFileName string = "stops.txt"
+const EnvMetadata string = "METADATA"
 
-var version Metadata = Metadata{"1", strconv.FormatInt(time.Now().Unix(), 10)}
+var defaultMetadataItem MetadataItem = MetadataItem{"1", "1", "1", strconv.FormatInt(time.Now().Unix(), 10)}
 
 // Read the data sources from the env var.
 // Returns the list of sources.
@@ -81,7 +82,7 @@ func (p *Bilbobus) Digest(sources []TransitSource) error {
 
 // Observer that returns the list of lines for this transit.
 func (p Bilbobus) Data() TransitData {
-	p.data.version = version
+	p.data.metadata = p.BuildMetadata()
 	return p.data
 }
 
@@ -158,4 +159,37 @@ func toStopSlice(m map[string]Stop) []Stop {
 		index++
 	}
 	return v
+}
+
+// Read the metadata from the env var.
+// Returns an object holding the Metadata information.
+func (p Bilbobus) BuildMetadata() []MetadataItem {
+	envData := os.Getenv(EnvMetadata)
+	// Base case
+	if len(envData) == 0 {
+		log.Printf("Warning: Env variable %v is empty!", EnvMetadata)
+		metadataDefault := make([]MetadataItem, 0)
+		return append(metadataDefault, defaultMetadataItem)
+	}
+
+	var metadata []MetadataItem
+	dec := json.NewDecoder(strings.NewReader(envData))
+	dec.DisallowUnknownFields()
+	for {
+		if err := dec.Decode(&metadata); err == io.EOF {
+			break
+		} else if err != nil {
+			log.Printf("Error while parsing input: %v ", err)
+			return nil
+		}
+	}
+
+	// Insert last update timestamp to the one which has not
+	for index, value := range metadata {
+		if len(value.LastUpdate)==0 {
+			metadata[index].LastUpdate = strconv.FormatInt(time.Now().Unix(), 10)
+			break
+		}
+	}
+	return metadata
 }

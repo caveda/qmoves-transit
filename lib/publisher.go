@@ -63,7 +63,7 @@ func publishRemote(td TransitData) error {
 		return err
 	}
 
-	basePath := "Bilbobus/" + string(td.version.Version)
+	basePath := "Bilbobus/" + string(td.metadata[0].PathData)
 
 	if err = postFullLines(client, ctx, td.lines, basePath+"/AllLines"); err != nil {
 		return err
@@ -75,16 +75,16 @@ func publishRemote(td TransitData) error {
 	}
 	log.Printf("Published remotely %v stop list", len(td.stops))
 
-	if err = postMetadata(client, ctx, td.version, basePath+"/Metadata"); err != nil {
+	if err = postMetadata(client, ctx, td.metadata, "Bilbobus/Metadata"); err != nil {
 		return err
 	}
-	log.Printf("Published remotely version %v", td.version)
+	log.Printf("Published remotely version %v", td.metadata)
 
 	return nil
 }
 
 
-func postMetadata(c *db.Client, ctx context.Context, version Metadata, path string) error {
+func postMetadata(c *db.Client, ctx context.Context, version []MetadataItem, path string) error {
 	c.NewRef(path).Delete(ctx)
 	if err := c.NewRef(path).Set(ctx, version); err != nil {
 		log.Printf("Error publishing version %v : %v", version, err)
