@@ -52,7 +52,6 @@ func LinesParser(l *[]Line, s TransitSource) error {
 
 	// Prepare containers
 	lines := make(map[string]Line)
-	stops := make(map[string]*Stop)
 
 	firstIgnored := false
 	for {
@@ -74,7 +73,7 @@ func LinesParser(l *[]Line, s TransitSource) error {
 
 		// Process each row
 		log.Printf("Processing row %v", row)
-		digestLineStopRow(row, lines, stops)
+		digestLineStopRow(row, lines)
 	}
 
 	*l = toLineSlice(lines)
@@ -90,13 +89,10 @@ func addStopToLine(lines map[string]Line, lineId string, s Stop) {
 	lines[lineId] = line
 }
 
-func digestLineStopRow(row []string, lines map[string]Line, stops map[string]*Stop) {
+func digestLineStopRow(row []string, lines map[string]Line) {
 	stopId := row[4]
 
-	_, stopPresent := stops[stopId]
-	if !stopPresent {
-		stops[stopId] = &Stop{stopId, row[5], row[7], Timetable{"", "", "", "", ""}, Coordinates{"", ""}}
-	}
+	stop := &Stop{stopId, row[5], row[7], Timetable{"", "", "", "", ""}, Coordinates{"", ""}}
 
 	lineId := buildLineIdWithDirectionPrefix(row[0], currentLinePrefixDirection)
 	if row[3] == "1" { // Every stop order equals to 1, we need to create a new line
@@ -106,7 +102,7 @@ func digestLineStopRow(row []string, lines map[string]Line, stops map[string]*St
 		lines[lineId] = Line{lineId, row[0], toLineNumber(row[0]), row[2], currentLineDirection, nil, nil,  &isNightly}
 	}
 
-	addStopToLine(lines, lineId, *stops[stopId])
+	addStopToLine(lines, lineId, *stop)
 }
 
 func toLineSlice(m map[string]Line) []Line {
