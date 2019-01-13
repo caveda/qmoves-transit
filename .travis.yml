@@ -1,3 +1,6 @@
- language: go
-  go:
-    - "1.10"
+language: go
+go:
+- 1.10.X
+
+script:
+- go test -v ./...
