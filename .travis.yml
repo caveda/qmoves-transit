@@ -1,6 +1,17 @@
+# Use the fast container-based test runner instead of the slow VM-based runner.
+sudo: false
+
 language: go
 go:
-- 1.10.X
+- 1.10.5
+
+# Only clone the most recent commit.
+git:
+  depth: 1
+
+# Don't email me the results of the test runs.
+notifications:
+  email: false
 
 script:
 - go test -v ./...
