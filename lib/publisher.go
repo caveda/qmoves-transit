@@ -68,7 +68,7 @@ func publishRemote(td TransitData) error {
 	if err = postFullLines(client, ctx, td.lines, basePath+"/AllLines"); err != nil {
 		return err
 	}
-	log.Printf("Published remotely %v full lines", len(td.lines))
+	log.Printf("Published remotely %v lines", len(td.lines))
 
 	if err = postStopList(client, ctx, td.stops, basePath+"/Stops"); err != nil {
 		return err
