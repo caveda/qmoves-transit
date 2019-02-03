@@ -12,21 +12,29 @@
 <link rel="search" type="application/opensearchdescription+xml" title="godoc" href="/opensearch.xml" />
 
 <link rel="stylesheet" href="/lib/godoc/jquery.treeview.css">
-<script type="text/javascript">window.initFuncs = [];</script>
+<script>window.initFuncs = [];</script>
+
 <script type="text/javascript">
 var _gaq = _gaq || [];
 _gaq.push(["_setAccount", "UA-11222381-2"]);
-_gaq.push(["b._setAccount", "UA-49880327-6"]);
 window.trackPageview = function() {
   _gaq.push(["_trackPageview", location.pathname+location.hash]);
-  _gaq.push(["b._trackPageview", location.pathname+location.hash]);
 };
 window.trackPageview();
 window.trackEvent = function(category, action, opt_label, opt_value, opt_noninteraction) {
   _gaq.push(["_trackEvent", category, action, opt_label, opt_value, opt_noninteraction]);
-  _gaq.push(["b._trackEvent", category, action, opt_label, opt_value, opt_noninteraction]);
 };
 </script>
+
+<script src="/lib/godoc/jquery.js" defer></script>
+<script src="/lib/godoc/jquery.treeview.js" defer></script>
+<script src="/lib/godoc/jquery.treeview.edit.js" defer></script>
+
+
+<script src="/lib/godoc/playground.js" defer></script>
+
+<script>var goVersion = "go1.11.5";</script>
+<script src="/lib/godoc/godocs.js" defer></script>
 </head>
 <body>
 
@@ -140,10 +148,10 @@ learned. You can <a href="//tour.golang.org/">take the tour
 online</a> or install it locally with:
 </p>
 <pre>
-$ go get golang.org/x/tour/gotour
+$ go get golang.org/x/tour
 </pre>
 <p>
-This will place the <code>gotour</code> binary in your workspace's <code>bin</code> directory.
+This will place the <code>tour</code> binary in your workspace's <code>bin</code> directory.
 </p>
 
 <h3 id="code"><a href="code.html">How to write Go code</a></h3>
@@ -283,7 +291,7 @@ See the <a href="/wiki/Articles">Articles page</a> at the
 
 <img class="gopher" src="/doc/gopher/talks.png"/>
 
-<h3 id="video_tour_of_go"><a href="http://research.swtch.com/gotour">A Video Tour of Go</a></h3>
+<h3 id="video_tour_of_go"><a href="https://research.swtch.com/gotour">A Video Tour of Go</a></h3>
 <p>
 Three things that make Go fast, fun, and productive:
 interfaces, reflection, and concurrency. Builds a toy web crawler to
@@ -321,7 +329,7 @@ documentation.
 
 
 <div id="footer">
-Build version go1.10.3.<br>
+Build version go1.11.5.<br>
 Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
 the content of this page is licensed under the
 Creative Commons Attribution 3.0 License,
@@ -333,17 +341,6 @@ and code is licensed under a <a href="/LICENSE">BSD license</a>.<br>
 </div><!-- .container -->
 </div><!-- #page -->
 
-<!-- TODO(adonovan): load these from <head> using "defer" attribute? -->
-<script type="text/javascript" src="/lib/godoc/jquery.js"></script>
-<script type="text/javascript" src="/lib/godoc/jquery.treeview.js"></script>
-<script type="text/javascript" src="/lib/godoc/jquery.treeview.edit.js"></script>
-
-
-<script type="text/javascript" src="/lib/godoc/playground.js"></script>
-
-<script>var goVersion = "go1.10.3";</script>
-<script type="text/javascript" src="/lib/godoc/godocs.js"></script>
-
 <script type="text/javascript">
 (function() {
   var ga = document.createElement("script"); ga.type = "text/javascript"; ga.async = true;
@@ -351,6 +348,7 @@ and code is licensed under a <a href="/LICENSE">BSD license</a>.<br>
   var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(ga, s);
 })();
 </script>
+
 </body>
 </html>
 

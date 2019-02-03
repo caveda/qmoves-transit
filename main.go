@@ -6,7 +6,8 @@ import (
 	"net/http"
 
 	"github.com/caveda/qmoves-transit/lib"
-	)
+	"os"
+)
 
 const downloadFolder string = "./download"
 
@@ -43,6 +44,14 @@ func prepare() {
 	}
 	bilboBus.Digest(sources)
 
+	// Data health analysis
+	err := transit.CheckConsistency(bilboBus.Data(),"./gen")
+	if err!=nil {
+		log.Printf("Found consistency errors: %s", err)
+		os.Exit(-1)
+	}
+
+	// Publishing
 	transit.Publish(bilboBus.Data(), "./gen", transit.JsonPresenter{})
 	log.Printf("Ready to serve the transit information")
 }
