@@ -11,9 +11,11 @@ import (
 	"io/ioutil"
 	"github.com/pkg/errors"
 	"strings"
+	"strconv"
 )
 
 // Constants
+const EnvRemediateAutomatically = "REMEDIATE_AUTOMATICALLY"
 const EnvBilbobusAgencyLines = "BILBOBUS_AGENCY_LINES"
 const bilbobusLineListPattern string = `(?m).*<option value="\S{2}">(\S{2})[\s,-]+(.*)[\s]*<\/option>`
 const SanitizerErrorTag = "INCONSISTENCY"
@@ -65,7 +67,13 @@ func checkLines(lines []Line, agencyDataPath string) error {
 		if l.Direction==DirectionForward && !strings.EqualFold(al.Name,l.Name) {
 			message := fmt.Sprintf(SanitizerErrorTag + ": agency line %v %v name does not match, expected %v %v", al.Id, al.Name, l.Id, l.Name)
 			log.Printf(message)
-			return errors.New(message)
+			if RemediateEnabled() {
+				log.Printf(message)
+			  RemediateLineName( &lines, l.AgencyId, al.Name)
+			} else {
+				log.Printf(message)
+				return errors.New(message)
+			}
 		}
 	}
 
@@ -119,4 +127,16 @@ func ParseAgencyLinesFile(filePath string) (map[string]AgencyLine, error) {
 	log.Printf("Found %v lines in the agency file.", len(lines))
 
 	return lines, nil
+}
+
+// RemediateEnabled returns True if the errors
+// found by sanitizer must be remediated as detected.
+func RemediateEnabled () bool {
+	result := false
+	value := os.Getenv(EnvNameReuseLocalData)
+	b, err := strconv.ParseBool(value)
+	if err == nil {
+		result = b
+	}
+	return result
 }

@@ -55,7 +55,7 @@ func (p *Bilbobus) Digest(sources []TransitSource) error {
 	for _, s := range sources {
 		parser, e := getParser(s)
 		if e != nil {
-			log.Printf("Error getting parser for source %v: %v", s.Id, e)
+			log.Printf("Error getting parser or source %v: %v", s.Id, e)
 			continue
 		}
 		if s.Id == SourceDayLines {

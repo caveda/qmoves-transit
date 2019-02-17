@@ -115,8 +115,6 @@ func toLineSlice(m map[string]Line) []Line {
 	return v
 }
 
-
-
 func decorateConnections(lineList *[]Line, linesMap map[string]Line) error {
 	for _, l := range *lineList {
 		for i, s := range l.Stops {
