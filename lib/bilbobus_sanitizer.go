@@ -68,10 +68,8 @@ func checkLines(lines []Line, agencyDataPath string) error {
 			message := fmt.Sprintf(SanitizerErrorTag + ": agency line %v %v name does not match, expected %v %v", al.Id, al.Name, l.Id, l.Name)
 			log.Printf(message)
 			if RemediateEnabled() {
-				log.Printf(message)
 			  RemediateLineName( &lines, l.AgencyId, al.Name)
 			} else {
-				log.Printf(message)
 				return errors.New(message)
 			}
 		}
