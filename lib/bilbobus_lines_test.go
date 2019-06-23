@@ -63,7 +63,7 @@ func TestParseAgencyLinesFile(t *testing.T) {
 			t.Errorf("Error creating file: %v", err)
 		}
 		lines, err := ParseAgencyLinesFile(path)
-		if !linesAreEqual(*lines,tc.expectedLines) || err != nil != tc.expectedError {
+		if !linesAreEqual(lines,tc.expectedLines) || err != nil != tc.expectedError {
 			t.Errorf("ParseAgencyLinesFile(#%v): expected (%v), actual (%v)", i, tc.expectedLines, lines)
 		}
 		os.Remove(path)
@@ -72,9 +72,9 @@ func TestParseAgencyLinesFile(t *testing.T) {
 }
 
 // Checks equality for maps of lines
-func linesAreEqual (actual, expected []Line) bool {
+func linesAreEqual (actual *[]Line, expected []Line) bool {
 	if actual == nil && expected ==nil {
 		return true
 	}
-	return reflect.DeepEqual(actual, expected)
+	return reflect.DeepEqual(*actual, expected)
 }

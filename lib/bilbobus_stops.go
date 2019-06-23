@@ -11,7 +11,7 @@ import (
 )
 
 // Constants
-const GeneratedBaseNumber int = 90000
+const GeneratedBaseNumber int = 9000
 const EnvBilbobusAgencyLineWithStops = "BILBOBUS_AGENCY_LINE_WITH_STOPS"
 const StopNameForwardIdentifier = "IDA"
 const StopNameBackwardIdentifier = "VUELTA"

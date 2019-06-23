@@ -20,7 +20,7 @@ var lineNumberIdMap map[string]int
 // associated with with the information published by the transit agency
 func LinesParser(l *[]Line, ts TransitSource) error {
 	log.Printf("Parsing lines")
-	lineNumberIdMap = make(map[string]int)
+
 	agencyLines, err := getAgencyLines(ts.Path, ts.Uri)
 	if err!=nil {
 		return err
@@ -45,6 +45,7 @@ func getAgencyLines (outputDataPath, uri string) (*[]Line, error) {
 
 // parseAgencyLinesFile parses the agency file containing the list of lines.
 func ParseAgencyLinesFile(filePath string) (*[]Line, error) {
+	lineNumberIdMap = make(map[string]int)
 	f, err := ioutil.ReadFile(filePath) // Read all
 	if err != nil || len(f) == 0 {
 		log.Printf("Error opening file %v. Error: %v ", filePath, err)
