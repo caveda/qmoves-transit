@@ -20,10 +20,9 @@ type Bilbobus struct {
 // Constants
 const EnvNameBilbao string = "BILBAO_TRANSIT"
 const separator string = "-"
-const gtsfStopsFileName string = "stops.txt"
 const EnvMetadata string = "METADATA"
 
-var defaultMetadataItem MetadataItem = MetadataItem{"1", "1", "1", strconv.FormatInt(time.Now().Unix(), 10)}
+var defaultMetadataItem = MetadataItem{"1", "1", "1", strconv.FormatInt(time.Now().Unix(), 10)}
 
 // Read the data sources from the env var.
 // Returns the list of sources.
@@ -58,17 +57,9 @@ func (p *Bilbobus) Digest(sources []TransitSource) error {
 			log.Printf("Error getting parser or source %v: %v", s.Id, e)
 			continue
 		}
-		if s.Id == SourceDayLines {
-			err = parser(&p.data.dayLines, s)
-		} else if s.Id == SourceNightLines {
-			err = parser(&p.data.nightLines, s)
-			if err==nil && len(p.data.lines)>0{
-				// Tag nightly lines
-				tagNightlyLines(&p.data);
-			}
-		} else {
-			err = parser(&p.data.lines, s)
-		}
+
+		err = parser(&p.data.lines, s)
+
 		if err != nil {
 			log.Printf("Error while processing source %v from path %v. Error: %v ", s.Id, s.Path, err)
 			continue
@@ -91,14 +82,10 @@ func getParser(s TransitSource) (Parse, error) {
 	switch s.Id {
 	case SourceLines:
 		return LinesParser, nil
-	case SourceLocation:
-		return LocationParser, nil
+	case SourceStops:
+		return StopsParser, nil
 	case SourceSchedule:
 		return ScheduleParser, nil
-	case SourceDayLines:
-		return LinesListParser, nil
-	case SourceNightLines:
-		return LinesListParser, nil
 	default:
 		return nil, errors.New("Unknown source id " + s.Id)
 	}

@@ -5,14 +5,14 @@ package transit
 import (
 	"os"
 	"strconv"
+	"strings"
+	"errors"
 )
 
 // Consts
 const SourceLines string = "Lines"
 const SourceSchedule string = "Schedule"
-const SourceLocation string = "Location"
-const SourceDayLines string = "DayLinesList"
-const SourceNightLines string = "NightLinesList"
+const SourceStops string = "Stops"
 const DirectionForward string = "FORWARD"
 const DirectionBackward string = "BACKWARD"
 const DirectionForwardShortPrefix string = "I"
@@ -31,6 +31,7 @@ const SundayTypeId string = "3"
 const DirectionForwardNumber string = "1"
 const DirectionBackwardNumber string = "2"
 const EnvNameReuseLocalData string = "REUSE_TRANSIT_LOCAL_FILES"
+const AgencyNameSeparator string = "-"
 
 // Globals
 var Directions = [2]string{DirectionForward, DirectionBackward}
@@ -150,4 +151,25 @@ func UseCachedData() bool {
 		result = b
 	}
 	return result
+}
+
+// ReverseLineName takes a line name formatted as "origin - destination" and
+// returns "destination - origin"
+func ReverseLineName (name string) (string, error) {
+
+	nameParts := strings.Split(name, AgencyNameSeparator)
+	if len(nameParts) != 2 {
+		err := errors.New("ReverseLineName: Name " + name + " can not be splitted in two parts using separator %v" + AgencyNameSeparator)
+		return "", err
+	}
+	origin := strings.TrimSpace(nameParts[0])
+	destination := strings.TrimSpace(nameParts[1])
+	return destination + " - " + origin, nil
+}
+
+// BuildLineIdWithDirection returns a line identifier based on
+// the agency Id and the direction (e.g. I182 for agency Id 182 and
+// direction FORWARD)
+func BuildLineIdWithDirection(id, direction string) string {
+	return ToDirectionPrefix(direction) + id
 }

@@ -3,12 +3,11 @@ package transit
 import (
 	"fmt"
 	"log"
-	"strings"
-	"errors"
+		"errors"
 )
 
 const RemediationTag = "REMEDIATE"
-const agencyNameSeparator string = "-"
+
 
 // RemediateLineName replace the detected line name in data by the
 // expected. The expected name shall correspond to direction FORWARD.
@@ -43,18 +42,4 @@ func  RemediateLineName(lines *[]Line, agencyLineId string, expected string) err
 	// If we reach this point. Remediation is not done.
 	err := errors.New(RemediationTag + ": Name of line " + agencyLineId + " not changed to " + expected)
 	return err
-}
-
-// ReverseLineName takes a line name formatted as "origin - destination" and
-// returns "destination - origin"
-func ReverseLineName (name string) (string, error) {
-
-	nameParts := strings.Split(name, agencyNameSeparator)
-	if len(nameParts) != 2 {
-		err := errors.New(RemediationTag + ": Name " + name + " can not be splitted in two parts using separator %v" + agencyNameSeparator)
-		return "", err
-	}
-	origin := strings.TrimSpace(nameParts[0])
-	destination := strings.TrimSpace(nameParts[1])
-	return destination + " - " + origin, nil
 }

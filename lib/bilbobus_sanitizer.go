@@ -1,24 +1,10 @@
 package transit
 
 import (
-	"log"
-	"os"
-	"path"
-
-
-				"regexp"
-	"fmt"
-	"io/ioutil"
-	"github.com/pkg/errors"
+				"github.com/pkg/errors"
 	"strings"
-	"strconv"
-)
+	)
 
-// Constants
-const EnvRemediateAutomatically = "REMEDIATE_AUTOMATICALLY"
-const EnvBilbobusAgencyLines = "BILBOBUS_AGENCY_LINES"
-const bilbobusLineListPattern string = `(?m).*<option value="\S{2}">(\S{2})[\s,-]+(.*)[\s]*<\/option>`
-const SanitizerErrorTag = "INCONSISTENCY"
 
 // Structs
 type AgencyLine struct {
@@ -28,113 +14,96 @@ type AgencyLine struct {
 
 // CheckConsistency verifies that the output data is consistent
 // with the information published by the transit agency
-func CheckConsistency(td TransitData, agencyDataPath string) error {
+func CheckConsistency(td TransitData) (report string, err error) {
 
-	if err := checkLines(td.lines, agencyDataPath); err != nil {
-		log.Printf("Consistency error in lines: %v", err)
-		return err
+	var linesReport string
+	if linesReport, err = checkLines(td.lines); err != nil {
+		return  linesReport, err
 	}
 
-	return nil
+	report += linesReport
+	return report, nil
 }
 
 
-// checkStopsSchedules verifies that the schedule information
-// associated with with the information published by the transit agency
-func checkLines(lines []Line, agencyDataPath string) error {
-	log.Printf("Consistency check: lines")
-	agencyLines, err := getAgencyLines(agencyDataPath)
-	if (err!=nil) {
-		return err
-	}
+// checkLines verifies that the lines information is complete.
+// Returns a string with the report of verification and an error
+// if any found issue couldn't be solved.
+func checkLines(lines []Line) (report string, err error) {
 
-	// CHECK: Same number of lines (ignoring directions)
-	if (len(agencyLines) * 2) != len(lines)  {
-		message := fmt.Sprintf(SanitizerErrorTag + ": %v of agency lines, expected %v", len(agencyLines),len(agencyLines))
-		log.Printf(message)
-		return errors.New(message)
-	}
+	var str strings.Builder
+	str.WriteString("\n------ Lines check -------")
 
-	// CHECK: Ids and names match
 	for _, l := range lines {
-		al, exists:= agencyLines[l.AgencyId]
-		if !exists {
-			message := fmt.Sprintf(SanitizerErrorTag + ": expected line %v %v not found in agency lines", l.Id, l.Name)
-			log.Printf(message)
-			return errors.New(message)
-		}
+		str.WriteString("\nLine " + l.Id + ": ")
 
-		if l.Direction==DirectionForward && !strings.EqualFold(al.Name,l.Name) {
-			message := fmt.Sprintf(SanitizerErrorTag + ": agency line %v %v name does not match, expected %v %v", al.Id, al.Name, l.Id, l.Name)
-			log.Printf(message)
-			if RemediateEnabled() {
-			  RemediateLineName( &lines, l.AgencyId, al.Name)
+		lineError := false
+		if lineError = len(l.Stops) == 0; lineError {
+			str.WriteString("No stops.")
+		} else if lineError = l.Name == ""; lineError {
+			str.WriteString("No name.")
+		} else if lineError = l.Number == 0; lineError {
+			str.WriteString("No number.")
+		} else if lineError = l.AgencyId == ""; lineError {
+			str.WriteString("No agencyId.")
+		} else if lineError = len(l.MapRoute) == 0; lineError {
+			str.WriteString("No map route.")
+		} else {
+			var stopsReport string
+			if stopsReport, lineError = checkStops(l.Stops); lineError {
+				str.WriteString(stopsReport + ". Line deleted")
 			} else {
-				return errors.New(message)
+				str.WriteString("Ok")
 			}
 		}
-	}
 
-	return nil
+		if lineError {
+			return str.String(), errors.New(str.String())
+		}
+	}
+	return str.String(), nil
 }
 
-// getAgencyLines fetch the list of lines published by the agency and
-// returns it. If something goes wrong, the returned list will be nil and error
-// holds the specific error.
-func getAgencyLines (outputDataPath string) (map[string]AgencyLine, error) {
 
-	agencyLinesUri := os.Getenv(EnvBilbobusAgencyLines)
+// checkStops verifies that each stop in the list is complete.
+// Returns a string with the report of verification and an error
+// if any found issue couldn't be solved.
+func checkStops (stops []Stop) (report string, error bool) {
 
-	p := path.Join(outputDataPath, "sanitizer_bilbobus_lines.html")
-	if !UseCachedData() || !Exists(p) {
-		Download(agencyLinesUri, p, IsFileSizeGreaterThanZero)
+	var str strings.Builder
+	for _, s := range stops {
+		if error = s.Location.Lat=="" || s.Location.Long==""; error {
+			str.WriteString("No location for stop " + s.Id)
+			break
+		}
+		if error = s.Schedule.MondayToThrusday=="" && s.Schedule.Friday=="" && s.Schedule.Weekday=="" &&
+			s.Schedule.Saturday=="" && s.Schedule.Sunday==""; error{
+			str.WriteString("No schedule for stop " + s.Id)
+			break
+		}
+		if error = s.Name==""; error {
+			str.WriteString("No name for stop " + s.Id)
+			break
+		}
 	}
-
-	lines, err := ParseAgencyLinesFile(p)
-	return lines, err
+	return str.String(),error
 }
 
-// parseAgencyLinesFile parses the agency file containing the list of lines.
-func ParseAgencyLinesFile(filePath string) (map[string]AgencyLine, error) {
-	f, err := ioutil.ReadFile(filePath) // Read all
-	if err != nil || len(f) == 0 {
-		log.Printf("Error opening file %v. Error: %v ", filePath, err)
-		return nil,err
-	}
 
-	// Find all lines
-	regex, err := regexp.Compile(bilbobusLineListPattern)
-	if err != nil {
-		log.Printf("Error compiling schedule regex %v. Error: %v ", bilbobusLineListPattern, err)
-		return nil,err
-	}
+// deleteLine deletes an element from the list of lines.
+//func deleteLine (lines []Line, pos int) []Line {
+//
+//}
 
-	times := regex.FindAllStringSubmatch(string(f), -1)
-	if times == nil {
-		message := fmt.Sprintf("No lines found inside the agency file")
-		log.Printf(message)
-		return nil, errors.New(message)
-	}
-
-	lines := make(map[string]AgencyLine)
-	for _, t := range times {
-		l := AgencyLine{t[1], t[2]}
-		lines[l.Id] = l
-	}
-
-	log.Printf("Found %v lines in the agency file.", len(lines))
-
-	return lines, nil
-}
 
 // RemediateEnabled returns True if the errors
 // found by sanitizer must be remediated as detected.
-func RemediateEnabled () bool {
-	result := false
-	value := os.Getenv(EnvNameReuseLocalData)
-	b, err := strconv.ParseBool(value)
-	if err == nil {
-		result = b
-	}
-	return result
-}
+//func RemediateEnabled () bool {
+//	result := false
+//	value := os.Getenv(EnvNameReuseLocalData)
+//	b, err := strconv.ParseBool(value)
+//	if err == nil {
+//		result = b
+//	}
+//	return result
+//}

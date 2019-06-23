@@ -1,11 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
-
-	"github.com/caveda/qmoves-transit/lib"
+		"log"
+		"github.com/caveda/qmoves-transit/lib"
 	"os"
 )
 
@@ -13,23 +10,9 @@ const downloadFolder string = "./download"
 
 var bilboBus transit.Bilbobus
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Request received")
-	// j, err := transit.JsonPresenter{}.FormatList(bilboBus.Data().lines)
-	// if err != nil {
-	// 	http.Error(w, "Can't get lines", 500)
-	// 	return
-	// }
-
-	// fmt.Fprintf(w, j)
-	return
-}
 
 func main() {
 	prepare()
-	//http.HandleFunc("/", handler)
-	//
-	//log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
 func prepare() {
@@ -45,11 +28,13 @@ func prepare() {
 	bilboBus.Digest(sources)
 
 	// Data health analysis
-	err := transit.CheckConsistency(bilboBus.Data(),"./gen")
+	report, err := transit.CheckConsistency(bilboBus.Data())
 	if err!=nil {
 		log.Printf("Found consistency errors: %s", err)
 		os.Exit(-1)
 	}
+
+	log.Printf(report)
 
 	// Publishing
 	transit.Publish(bilboBus.Data(), "./gen", transit.JsonPresenter{})

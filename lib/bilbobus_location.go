@@ -1,16 +1,8 @@
 package transit
 
-import (
-	"encoding/csv"
-	"io"
-	"log"
-	"os"
-	"path"
-)
-
 // LocationParser implements the signature of type Decorator.
 // It's responsible for decorating lines with the location of the stops.
-func LocationParser(l *[]Line, ts TransitSource) error {
+/*func LocationParser(l *[]Line, ts TransitSource) error {
 	baseDir := path.Dir(ts.Path)
 	p := path.Join(baseDir, gtsfStopsFileName)
 	err := UnzipFromArchive(ts.Path, gtsfStopsFileName, baseDir)
@@ -81,3 +73,4 @@ func addRoute(l *Line) {
 	}
 	(*l).MapRoute = r
 }
+*/

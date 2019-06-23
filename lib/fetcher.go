@@ -41,7 +41,7 @@ func Download(address string, fileFullPath string, validateFunc func(string)bool
 			err = fmt.Errorf("Unknown protocol for url %v", address)
 		}
 		validated = validateFunc(fileFullPath)
-		log.Printf("Download: validation of %v is %v", fileFullPath, validated)
+		log.Printf("%v downloaded OK", fileFullPath)
 	}
 	return err
 }
