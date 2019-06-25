@@ -9,18 +9,20 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"os"
 )
 
 // Constants
-const EnvBilbobusAgencyLines = "BILBOBUS_AGENCY_LINES"
+const EnvIgnoreLinesIds="IGNORE_LINES_IDS"
 const BilbobusLineListPattern string = `(?m).*<option value="\S{2}">(\S{2})[\s,-]+(.*)[\s]*<\/option>`
 var lineNumberIdMap map[string]int
+var linesIgnored map[string]bool
 
 // checkStopsSchedules verifies that the schedule information
 // associated with with the information published by the transit agency
 func LinesParser(l *[]Line, ts TransitSource) error {
 	log.Printf("Parsing lines")
-
+	loadIgnoreLineIds()
 	agencyLines, err := getAgencyLines(ts.Path, ts.Uri)
 	if err!=nil {
 		return err
@@ -35,7 +37,7 @@ func LinesParser(l *[]Line, ts TransitSource) error {
 // holds the specific error.
 func getAgencyLines (outputDataPath, uri string) (*[]Line, error) {
 
-	p := path.Join(outputDataPath, "agency_lines.html")
+	p := path.Join(outputDataPath, "lines.html")
 	if !UseCachedData() || !Exists(p) {
 		Download(uri, p, IsFileSizeGreaterThanZero)
 	}
@@ -68,11 +70,18 @@ func ParseAgencyLinesFile(filePath string) (*[]Line, error) {
 
 	var lines []Line
 	for _, t := range times {
+
+		if isIgnored(t[1]) {
+			log.Printf("ParseLines: Line %v shall be ignored", t[1])
+			continue
+		}
+
 		lines = append(lines, CreateLine(t[1], t[2], DirectionForward))
 
 		backwardsName, err := ReverseLineName(t[2])
 		if err!=nil {
-			return nil, err
+			log.Printf("ParseLines: Can no reverse line %v name: %v. Apply same name both directions.", t[1], t[2])
+			backwardsName = t[2]
 		}
 
 		lines = append(lines, CreateLine(t[1], backwardsName, DirectionBackward))
@@ -110,4 +119,34 @@ func toLineNumber (s string) int {
 // based on the agencyId.
 func isNightlyLine (agencyId string) bool {
 	return strings.HasPrefix(strings.ToUpper(agencyId),"G")
+}
+
+// loadIgnoreLineIds loads the list of line ids to ignore from environment
+func loadIgnoreLineIds() {
+	linesIgnored=make(map[string]bool)
+	envData := os.Getenv(EnvIgnoreLinesIds)
+	// Anything to ignore?
+	if len(envData) == 0 {
+		log.Printf("Env variable %v is empty. Nothing to ignore.", EnvIgnoreLinesIds)
+		return
+	}
+
+
+	ids := strings.Split(envData, ",")
+	if len(ids) == 0{
+		log.Printf("No lines shall be ignored")
+		return
+	}
+
+
+	for _, id := range ids {
+		linesIgnored[strings.TrimSpace(id)]=true
+	}
+}
+
+
+func isIgnored (id string) bool {
+
+	_, ok := linesIgnored[strings.TrimSpace(id)]
+	return ok
 }
