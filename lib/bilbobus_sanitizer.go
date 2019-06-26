@@ -46,6 +46,8 @@ func checkLines(lines []Line) (report string, err error) {
 			str.WriteString("No number.")
 		} else if lineError = l.AgencyId == ""; lineError {
 			str.WriteString("No agencyId.")
+		} else if lineError = l.Direction == ""; lineError {
+			str.WriteString("No direction.")
 		} else if lineError = len(l.MapRoute) == 0; lineError {
 			str.WriteString("No map route.")
 		} else {
