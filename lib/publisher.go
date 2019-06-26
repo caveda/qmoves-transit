@@ -24,10 +24,10 @@ func Publish(td TransitData, destPath string, p Presenter) error {
 		return err
 	}
 
-/*	if err := publishRemote(td); err != nil {
+	if err := publishRemote(td); err != nil {
 		log.Printf("Error publishing lines remotely: %v", err)
 		return err
-	}*/
+	}
 
 	return nil
 }
