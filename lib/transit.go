@@ -32,6 +32,7 @@ const DirectionForwardNumber string = "1"
 const DirectionBackwardNumber string = "2"
 const EnvNameReuseLocalData string = "REUSE_TRANSIT_LOCAL_FILES"
 const AgencyNameSeparator string = "-"
+const EnvRemoveDuplicatedStopsInLine string = "REMOVE_DUPLICATED_STOPS_IN_LINE"
 
 // Globals
 var Directions = [2]string{DirectionForward, DirectionBackward}
@@ -55,6 +56,7 @@ type MetadataItem struct {
 	MinVersion string `json:"MinVersion,omitempty"`
 	MaxVersion string `json:"MaxVersion,omitempty"`
 	PathData   string `json:"PathData,omitempty"`
+	Validity   string `json:"Validity,omitempty"`
 	LastUpdate string `json:"LastUpdate,omitempty"`
 }
 
@@ -144,13 +146,13 @@ func ToDirectionPrefix(direction string) string {
 // UseCachedData returns True if the locally cached data must be used
 // as data source for transit information.
 func UseCachedData() bool {
-	result := false
-	value := os.Getenv(EnvNameReuseLocalData)
-	b, err := strconv.ParseBool(value)
-	if err == nil {
-		result = b
-	}
-	return result
+	return getEnvVariableValue(EnvNameReuseLocalData)
+}
+
+// RemoveDuplicatedStopsInLine returns True if duplicated stops are
+// not allowed in the same line for a given direction
+func RemoveDuplicatedStopsInLine() bool {
+	return getEnvVariableValue(EnvRemoveDuplicatedStopsInLine)
 }
 
 // ReverseLineName takes a line name formatted as "origin - destination" and
@@ -172,4 +174,16 @@ func ReverseLineName (name string) (string, error) {
 // direction FORWARD)
 func BuildLineIdWithDirection(id, direction string) string {
 	return ToDirectionPrefix(direction) + id
+}
+
+// getEnvVariableValue returns True if the variable is defined
+// and the value is true
+func getEnvVariableValue (v string) bool {
+	result := false
+	value := os.Getenv(v)
+	b, err := strconv.ParseBool(value)
+	if err == nil {
+		result = b
+	}
+	return result
 }

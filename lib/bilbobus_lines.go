@@ -17,6 +17,7 @@ const EnvIgnoreLinesIds="IGNORE_LINES_IDS"
 const BilbobusLineListPattern string = `(?m).*<option value="\S{2}">(\S{2})[\s,-]+(.*)[\s]*<\/option>`
 var lineNumberIdMap map[string]int
 var linesIgnored map[string]bool
+var linesProcessed map[string]bool
 
 // checkStopsSchedules verifies that the schedule information
 // associated with with the information published by the transit agency
@@ -47,7 +48,10 @@ func getAgencyLines (outputDataPath, uri string) (*[]Line, error) {
 
 // parseAgencyLinesFile parses the agency file containing the list of lines.
 func ParseAgencyLinesFile(filePath string) (*[]Line, error) {
+
 	lineNumberIdMap = make(map[string]int)
+	linesProcessed = make(map[string]bool)
+
 	f, err := ioutil.ReadFile(filePath) // Read all
 	if err != nil || len(f) == 0 {
 		log.Printf("Error opening file %v. Error: %v ", filePath, err)
@@ -75,6 +79,13 @@ func ParseAgencyLinesFile(filePath string) (*[]Line, error) {
 			log.Printf("ParseLines: Line %v shall be ignored", t[1])
 			continue
 		}
+
+		if _,duplicated:=linesProcessed[t[1]]; duplicated {
+			log.Printf("ParseLines: Line %v has been already processed. Duplicated in source", t[1])
+			continue
+		}
+
+		linesProcessed[t[1]]=true
 
 		lines = append(lines, CreateLine(t[1], t[2], DirectionForward))
 

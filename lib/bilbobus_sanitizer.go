@@ -51,9 +51,9 @@ func checkLines(lines []Line) (report string, err error) {
 		} else {
 			var stopsReport string
 			if stopsReport, lineError = checkStops(l.Stops); lineError {
-				str.WriteString(stopsReport + ". Line deleted")
+				str.WriteString(stopsReport + "\nError")
 			} else {
-				str.WriteString("Ok")
+				str.WriteString(stopsReport + ". Ok")
 			}
 		}
 
@@ -76,14 +76,14 @@ func checkStops (stops []Stop) (report string, error bool) {
 			str.WriteString("No location for stop " + s.Id)
 			break
 		}
-		if error = s.Schedule.MondayToThrusday=="" && s.Schedule.Friday=="" && s.Schedule.Weekday=="" &&
-			s.Schedule.Saturday=="" && s.Schedule.Sunday==""; error{
-			str.WriteString("No schedule for stop " + s.Id)
-			break
-		}
 		if error = s.Name==""; error {
 			str.WriteString("No name for stop " + s.Id)
 			break
+		}
+		if error = s.Schedule.MondayToThrusday=="" && s.Schedule.Friday=="" && s.Schedule.Weekday=="" &&
+			s.Schedule.Saturday=="" && s.Schedule.Sunday==""; error{
+			str.WriteString("No schedule for stop " + s.Id + " " + s.Name +". Ignoring error")
+			error = false
 		}
 	}
 	return str.String(),error

@@ -147,15 +147,31 @@ func parseLineStops (filePath string) (forwardStops []Stop, backwardStops []Stop
 
 		stop := buildStop(ids[i][1],html.UnescapeString(n[2]), connections, positions[i][1], positions[i][2])
 		if d==DirectionForward {
-			fs = append(fs, stop)
+			fs = addStopToList(fs, stop)
 		} else {
-			bs = append(bs, stop)
+			bs = addStopToList(bs, stop)
 		}
 	}
 
 	log.Printf("Forward stops %v",  len(fs) )
 	log.Printf("Backward stops %v",  len(bs) )
 	return fs, bs, nil
+}
+
+
+func addStopToList (stopList []Stop, stop Stop) []Stop {
+
+	if RemoveDuplicatedStopsInLine() {
+		// Prevent duplicates
+		for _, s := range stopList {
+			if s.Id == stop.Id {
+				log.Printf("Detected duplicated stop %v - %v", stop.Id, stop.Name)
+				return stopList
+			}
+		}
+	}
+
+	return append(stopList,stop)
 }
 
 
