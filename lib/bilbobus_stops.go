@@ -214,7 +214,7 @@ func buildConnectionList(connectionsRaw string) string {
 	for i, m := range matches {
 		connections += buildConnectionCode(m[1], m[2])
 		if i<len(matches)-1{
-			connections += ","
+			connections += " "
 		}
 	}
 	return connections
