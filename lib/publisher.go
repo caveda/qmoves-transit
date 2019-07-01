@@ -70,11 +70,6 @@ func publishRemote(td TransitData) error {
 	}
 	log.Printf("Published remotely %v lines", len(td.lines))
 
-	if err = postStopList(client, ctx, td.stops, basePath+"/Stops"); err != nil {
-		return err
-	}
-	log.Printf("Published remotely %v stop list", len(td.stops))
-
 	if err = postMetadata(client, ctx, td.metadata, "Bilbobus/Metadata"); err != nil {
 		return err
 	}

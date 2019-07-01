@@ -132,7 +132,7 @@ func extractStops (l []Line) ([]Stop, error){
 func addLineIdToConnections (connections string, newLineId string) string {
 
 	if len(connections)!=0 {
-		connections += ","
+		connections += " "
 	}
 	connections+=newLineId
 	return connections
