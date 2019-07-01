@@ -57,6 +57,7 @@ type MetadataItem struct {
 	MaxVersion string `json:"MaxVersion,omitempty"`
 	PathData   string `json:"PathData,omitempty"`
 	Validity   string `json:"Validity,omitempty"`
+	UpdateClient string `json:"UpdateClient,omitempty"`
 	LastUpdate string `json:"LastUpdate,omitempty"`
 }
 

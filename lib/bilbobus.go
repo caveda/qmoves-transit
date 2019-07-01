@@ -22,7 +22,7 @@ const EnvNameBilbao string = "BILBAO_TRANSIT"
 const separator string = "-"
 const EnvMetadata string = "METADATA"
 
-var defaultMetadataItem = MetadataItem{"1", "1", "1", "86400", strconv.FormatInt(time.Now().Unix(), 10)}
+var defaultMetadataItem = MetadataItem{"1", "1", "1", "86400", "False", strconv.FormatInt(time.Now().Unix(), 10)}
 
 // Read the data sources from the env var.
 // Returns the list of sources.
