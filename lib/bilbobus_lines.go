@@ -10,20 +10,24 @@ import (
 	"strconv"
 	"strings"
 	"os"
+	"encoding/json"
 )
 
 // Constants
 const EnvIgnoreLinesIds="IGNORE_LINES_IDS"
+const EnvMapLineNumbers="BILBOBUS_SPECIAL_LINES_MAPPING"
 const BilbobusLineListPattern string = `(?m).*<option value="\S{2}">(\S{2})[\s,-]+(.*)[\s]*<\/option>`
 var lineNumberIdMap map[string]int
 var linesIgnored map[string]bool
 var linesProcessed map[string]bool
+var lineNumberMapStr map[string]string
 
 // checkStopsSchedules verifies that the schedule information
 // associated with with the information published by the transit agency
 func LinesParser(l *[]Line, ts TransitSource) error {
 	log.Printf("Parsing lines")
 	loadIgnoreLineIds()
+	loadLineNumberMapping()
 	agencyLines, err := getAgencyLines(ts.Path, ts.Uri)
 	if err!=nil {
 		return err
@@ -105,10 +109,43 @@ func ParseAgencyLinesFile(filePath string) (*[]Line, error) {
 func CreateLine (id string, name string, direction string) (Line) {
 
 	isNightly := isNightlyLine(id)
-	l := Line{BuildLineIdWithDirection(id, direction), id, toLineNumber(id),
+	l := Line{BuildLineIdWithDirection(id, direction), id, toLineNumberMap(id),
 		name, direction, nil, nil, &isNightly}
 	return l
 }
+
+
+func loadLineNumberMapping () {
+
+	envData := os.Getenv(EnvMapLineNumbers)
+	if len(envData) == 0 {
+		log.Printf("Env variable %v is empty. Nothing to map.", EnvMapLineNumbers)
+		return
+	}
+
+	err := json.Unmarshal([]byte(envData), &lineNumberMapStr)
+	if err !=nil  {
+		log.Printf("Error mapping content of %v", EnvMapLineNumbers)
+		return
+	}
+}
+
+
+func toLineNumberMap (s string) int {
+	var n = -1
+	if len(lineNumberMapStr)>0 {
+		nstr, exists := lineNumberMapStr[strings.ToUpper(s)]
+		if exists {
+			n, _ = strconv.Atoi(nstr)
+		}
+	}
+
+	if n==-1 {
+		n = toLineNumber(s)
+	}
+	return n
+}
+
 
 func toLineNumber (s string) int {
 	var n int
