@@ -68,26 +68,26 @@ type TransitSource struct {
 
 // Location data (typically of a stop).
 type Coordinates struct {
-	Lat  string `json:"Lat,omitempty"`
-	Long string `json:"Long,omitempty"`
+	Lat  string `json:"La,omitempty"`
+	Long string `json:"Lo,omitempty"`
 }
 
 // Timetable stores the schedule per type of day.
 type Timetable struct {
-	Weekday  string `json:"Weekday,omitempty"`
-	MondayToThrusday string `json:"MondayToThrusday,omitempty"`
-	Friday   string `json:"Friday,omitempty"`
-	Saturday string `json:"Saturday,omitempty"`
-	Sunday   string `json:"Sunday,omitempty"`
+	Weekday  string `json:"Wor,omitempty"`
+	MondayToThrusday string `json:"M2T,omitempty"`
+	Friday   string `json:"Fri,omitempty"`
+	Saturday string `json:"Sat,omitempty"`
+	Sunday   string `json:"Sun,omitempty"`
 }
 
 // Stop keeps the information of a (bus, metro,...) stop.
 type Stop struct {
 	Id          string      `json:"Id,omitempty"`
-	Name        string      `json:"Name,omitempty"`
-	Connections string      `json:"Connections,omitempty"`
-	Schedule    Timetable   `json:"Schedule,omitempty"`
-	Location    Coordinates `json:"Location,omitempty"`
+	Name        string      `json:"Na,omitempty"`
+	Connections string      `json:"Co,omitempty"`
+	Schedule    Timetable   `json:"Sc,omitempty"`
+	Location    Coordinates `json:"Lc,omitempty"`
 }
 
 // Line represents a line of transport mean. Consists of
@@ -97,10 +97,10 @@ type Line struct {
 	AgencyId  string		`json:"AgencyId,omitempty"`
 	Number    int       	`json:"Number,omitempty"`
 	Name      string        `json:"Name,omitempty"`
-	Direction string        `json:"Direction,omitempty"`
+	Direction string        `json:"Dir,omitempty"`
 	Stops     []Stop        `json:"Stops,omitempty"`
-	MapRoute  []Coordinates `json:"MapRoute,omitempty"`
-	IsNightLine *bool		`json:"IsNightLine,omitempty"`
+	MapRoute  []Coordinates `json:"Map,omitempty"`
+	IsNightLine *bool		`json:"Night,omitempty"`
 }
 
 // Parse is a type of function that receives a list of Lines and adds
