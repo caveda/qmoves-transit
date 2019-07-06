@@ -14,6 +14,7 @@ import (
 // Constants
 const EnvDatabaseUri string = "DATABASE_URI"
 const EnvDatabaseCredentials string = "DATABASE_CREDENTIALS_PATH"
+const FormmatedLinesOutputName  string = "alllines.json"
 
 // Publish deploys lines in the correct format in path.
 // The format is determined by the presenter.
@@ -36,19 +37,17 @@ func publishLocally(lines []Line, destPath string, p Presenter) error {
 	log.Printf("Publishing %d lines locally", len(lines))
 	os.MkdirAll(destPath, os.ModePerm)
 
-	for _, l := range lines {
-		fl, err := p.Format(l)
-		if err != nil {
-			log.Printf("Error formatting line %v. Error:%v", l, err)
-			return err
-		}
+	json, err := p.FormatList(lines)
+	if err != nil {
+		log.Printf("Error formatting list of lines. Error:%v", err)
+		return err
+	}
 
-		// Write formatted line as a file in destination
-		err = CreateFile(path.Join(destPath, l.Id), fl)
-		if err != nil {
-			log.Printf("Error creating file for line %v. Error:%v", l.Id, err)
-			return err
-		}
+	// Write formatted line as a file in destination
+	err = CreateFile(path.Join(destPath, FormmatedLinesOutputName), json)
+	if err != nil {
+		log.Printf("Error creating file for lines. Error:%v", err)
+		return err
 	}
 
 	return nil
@@ -63,12 +62,14 @@ func publishRemote(td TransitData) error {
 		return err
 	}
 
-	basePath := "Bilbobus/" + string(td.metadata[0].PathData)
+	//basePath := "Bilbobus/" + string(td.metadata[0].PathData)
 
+	/*
 	if err = postFullLines(client, ctx, td.lines, basePath+"/AllLines"); err != nil {
 		return err
 	}
 	log.Printf("Published remotely %v lines", len(td.lines))
+	*/
 
 	if err = postMetadata(client, ctx, td.metadata, "Bilbobus/Metadata"); err != nil {
 		return err
