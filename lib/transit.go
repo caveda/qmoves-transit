@@ -3,10 +3,8 @@
 package transit
 
 import (
-	"os"
-	"strconv"
-	"strings"
 	"errors"
+	"strings"
 )
 
 // Consts
@@ -40,11 +38,11 @@ var DirectionsPrefixes = [2]string{DirectionForwardShortPrefix, DirectionBackwar
 
 // Bilbobus is a parser of transit information of Bilbao bus agency.
 type TransitData struct {
-	metadata  	[]MetadataItem
-	lines      	[]Line
-	dayLines   	[]Line
-	nightLines 	[]Line
-	stops		[]Stop
+	metadata   []MetadataItem
+	lines      []Line
+	dayLines   []Line
+	nightLines []Line
+	stops      []Stop
 }
 
 // Metadata contains meta-information about the data
@@ -53,12 +51,12 @@ type TransitData struct {
 // redirected to the right version of the data according to
 // MinVersion and MaxVersion.
 type MetadataItem struct {
-	MinVersion string `json:"MinVersion,omitempty"`
-	MaxVersion string `json:"MaxVersion,omitempty"`
-	PathData   string `json:"PathData,omitempty"`
-	Validity   string `json:"Validity,omitempty"`
+	MinVersion   string `json:"MinVersion,omitempty"`
+	MaxVersion   string `json:"MaxVersion,omitempty"`
+	PathData     string `json:"PathData,omitempty"`
+	Validity     string `json:"Validity,omitempty"`
 	UpdateClient string `json:"UpdateClient,omitempty"`
-	LastUpdate string `json:"LastUpdate,omitempty"`
+	LastUpdate   string `json:"LastUpdate,omitempty"`
 }
 
 // TransitSource tells what data a source has to have.
@@ -74,11 +72,11 @@ type Coordinates struct {
 
 // Timetable stores the schedule per type of day.
 type Timetable struct {
-	Weekday  string `json:"Wor,omitempty"`
+	Weekday          string `json:"Wor,omitempty"`
 	MondayToThrusday string `json:"M2T,omitempty"`
-	Friday   string `json:"Fri,omitempty"`
-	Saturday string `json:"Sat,omitempty"`
-	Sunday   string `json:"Sun,omitempty"`
+	Friday           string `json:"Fri,omitempty"`
+	Saturday         string `json:"Sat,omitempty"`
+	Sunday           string `json:"Sun,omitempty"`
 }
 
 // Stop keeps the information of a (bus, metro,...) stop.
@@ -93,14 +91,14 @@ type Stop struct {
 // Line represents a line of transport mean. Consists of
 // some data and the list of stops for the route of the line.
 type Line struct {
-	Id        string        `json:"Id,omitempty"`
-	AgencyId  string		`json:"AgencyId,omitempty"`
-	Number    int       	`json:"Number,omitempty"`
-	Name      string        `json:"Name,omitempty"`
-	Direction string        `json:"Dir,omitempty"`
-	Stops     []Stop        `json:"Stops,omitempty"`
-	MapRoute  []Coordinates `json:"Map,omitempty"`
-	IsNightLine *bool		`json:"Night,omitempty"`
+	Id          string        `json:"Id,omitempty"`
+	AgencyId    string        `json:"AgencyId,omitempty"`
+	Number      int           `json:"Number,omitempty"`
+	Name        string        `json:"Name,omitempty"`
+	Direction   string        `json:"Dir,omitempty"`
+	Stops       []Stop        `json:"Stops,omitempty"`
+	MapRoute    []Coordinates `json:"Map,omitempty"`
+	IsNightLine *bool         `json:"Night,omitempty"`
 }
 
 // Parse is a type of function that receives a list of Lines and adds
@@ -147,18 +145,18 @@ func ToDirectionPrefix(direction string) string {
 // UseCachedData returns True if the locally cached data must be used
 // as data source for transit information.
 func UseCachedData() bool {
-	return getEnvVariableValue(EnvNameReuseLocalData)
+	return GetEnvVariableValueBool(EnvNameReuseLocalData)
 }
 
 // RemoveDuplicatedStopsInLine returns True if duplicated stops are
 // not allowed in the same line for a given direction
 func RemoveDuplicatedStopsInLine() bool {
-	return getEnvVariableValue(EnvRemoveDuplicatedStopsInLine)
+	return GetEnvVariableValueBool(EnvRemoveDuplicatedStopsInLine)
 }
 
 // ReverseLineName takes a line name formatted as "origin - destination" and
 // returns "destination - origin"
-func ReverseLineName (name string) (string, error) {
+func ReverseLineName(name string) (string, error) {
 
 	nameParts := strings.Split(name, AgencyNameSeparator)
 	if len(nameParts) != 2 {
@@ -175,16 +173,4 @@ func ReverseLineName (name string) (string, error) {
 // direction FORWARD)
 func BuildLineIdWithDirection(id, direction string) string {
 	return ToDirectionPrefix(direction) + id
-}
-
-// getEnvVariableValue returns True if the variable is defined
-// and the value is true
-func getEnvVariableValue (v string) bool {
-	result := false
-	value := os.Getenv(v)
-	b, err := strconv.ParseBool(value)
-	if err == nil {
-		result = b
-	}
-	return result
 }

@@ -1,12 +1,13 @@
 package transit
 
 import (
+	"errors"
+	"hash/crc32"
+	"log"
 	"os"
 	"path/filepath"
-	"hash/crc32"
 	"regexp"
-	"log"
-		"errors"
+	"strconv"
 )
 
 // CurrentPath returns the absolute current path.
@@ -50,30 +51,30 @@ func Exists(path string) bool {
 }
 
 // CRC32 calculates the CRC32 of the given string
-func CRC32 (s string) int {
+func CRC32(s string) int {
 	crc32q := crc32.MakeTable(0xD5828281)
 	return int(crc32.Checksum([]byte(s), crc32q))
 }
 
 // IsFileSizeGreaterThanZero returns true if the file
 // p is greater than zero.
-func IsFileSizeGreaterThanZero (p string) bool {
-	fi, e := os.Stat(p);
+func IsFileSizeGreaterThanZero(p string) bool {
+	fi, e := os.Stat(p)
 	if e != nil {
 		return false
 	}
 	// get the size
-	return fi.Size()>0
+	return fi.Size() > 0
 }
 
 // ApplyRegexAllSubmatch compile and apply the supplied regular expression over
 // content and returns the list of matches
-func ApplyRegexAllSubmatch (content string, regex string) ([][]string, error) {
+func ApplyRegexAllSubmatch(content string, regex string) ([][]string, error) {
 	// Compile expression
 	r, err := regexp.Compile(regex)
 	if err != nil {
 		log.Printf("Error compiling schedule regex %v. Error: %v ", regex, err)
-		return nil,err
+		return nil, err
 	}
 
 	matches := r.FindAllStringSubmatch(content, -1)
@@ -82,4 +83,16 @@ func ApplyRegexAllSubmatch (content string, regex string) ([][]string, error) {
 	}
 
 	return matches, nil
+}
+
+// GetEnvVariableValueBool returns true if the variable is defined
+// and the value can be mapped to true. False otherwise.
+func GetEnvVariableValueBool(v string) bool {
+	result := false
+	value := os.Getenv(v)
+	b, err := strconv.ParseBool(value)
+	if err == nil {
+		result = b
+	}
+	return result
 }

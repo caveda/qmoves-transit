@@ -12,9 +12,10 @@ import (
 )
 
 // Constants
-const EnvDatabaseUri string = "DATABASE_URI"
-const EnvDatabaseCredentials string = "DATABASE_CREDENTIALS_PATH"
-const FormmatedLinesOutputName  string = "alllines.json"
+const envDatabaseUri string = "DATABASE_URI"
+const envDatabaseCredentials string = "DATABASE_CREDENTIALS_PATH"
+const formmatedLinesOutputName string = "alllines.json"
+const envDoNotPublish string = "DO_NOT_PUBLISH_REMOTE"
 
 // Publish deploys lines in the correct format in path.
 // The format is determined by the presenter.
@@ -25,9 +26,14 @@ func Publish(td TransitData, destPath string, p Presenter) error {
 		return err
 	}
 
-	if err := publishRemote(td); err != nil {
-		log.Printf("Error publishing lines remotely: %v", err)
-		return err
+	if GetEnvVariableValueBool(envDoNotPublish) {
+		log.Printf("Publishing data to remote source")
+		if err := publishRemote(td); err != nil {
+			log.Printf("Error publishing lines remotely: %v", err)
+			return err
+		}
+	} else {
+		log.Printf("Skipped remote publish")
 	}
 
 	return nil
@@ -44,7 +50,7 @@ func publishLocally(lines []Line, destPath string, p Presenter) error {
 	}
 
 	// Write formatted line as a file in destination
-	err = CreateFile(path.Join(destPath, FormmatedLinesOutputName), json)
+	err = CreateFile(path.Join(destPath, formmatedLinesOutputName), json)
 	if err != nil {
 		log.Printf("Error creating file for lines. Error:%v", err)
 		return err
@@ -62,16 +68,7 @@ func publishRemote(td TransitData) error {
 		return err
 	}
 
-	//basePath := "Bilbobus/" + string(td.metadata[0].PathData)
-
-	/*
-	if err = postFullLines(client, ctx, td.lines, basePath+"/AllLines"); err != nil {
-		return err
-	}
-	log.Printf("Published remotely %v lines", len(td.lines))
-	*/
-
-	if err = postMetadata(client, ctx, td.metadata, "Bilbobus/Metadata"); err != nil {
+	if err = postMetadata(ctx, client, td.metadata, "Bilbobus/Metadata"); err != nil {
 		return err
 	}
 	log.Printf("Published remotely version %v", td.metadata)
@@ -79,8 +76,7 @@ func publishRemote(td TransitData) error {
 	return nil
 }
 
-
-func postMetadata(c *db.Client, ctx context.Context, version []MetadataItem, path string) error {
+func postMetadata(ctx context.Context, c *db.Client, version []MetadataItem, path string) error {
 	c.NewRef(path).Delete(ctx)
 	if err := c.NewRef(path).Set(ctx, version); err != nil {
 		log.Printf("Error publishing version %v : %v", version, err)
@@ -89,7 +85,7 @@ func postMetadata(c *db.Client, ctx context.Context, version []MetadataItem, pat
 	return nil
 }
 
-func postFullLines(c *db.Client, ctx context.Context, lines []Line, path string) error {
+func postFullLines(ctx context.Context, c *db.Client, lines []Line, path string) error {
 	c.NewRef(path).Delete(ctx)
 	for _, l := range lines {
 		if err := c.NewRef(path+"/"+l.Id).Set(ctx, l); err != nil {
@@ -100,7 +96,7 @@ func postFullLines(c *db.Client, ctx context.Context, lines []Line, path string)
 	return nil
 }
 
-func postStopList(c *db.Client, ctx context.Context, stops []Stop, path string) error {
+func postStopList(ctx context.Context, c *db.Client, stops []Stop, path string) error {
 	c.NewRef(path).Delete(ctx)
 	if err := c.NewRef(path).Set(ctx, stops); err != nil {
 		log.Printf("Error publishing stopList at %v : %v", path, err)
@@ -111,10 +107,10 @@ func postStopList(c *db.Client, ctx context.Context, stops []Stop, path string) 
 
 func getFirebaseClient(ctx context.Context) (*db.Client, error) {
 	config := &firebase.Config{
-		DatabaseURL: os.Getenv(EnvDatabaseUri),
+		DatabaseURL: os.Getenv(envDatabaseUri),
 	}
 
-	credentials := os.Getenv(EnvDatabaseCredentials)
+	credentials := os.Getenv(envDatabaseCredentials)
 	log.Printf("Credentials file: %v", credentials)
 	opt := option.WithCredentialsFile(credentials)
 	app, err := firebase.NewApp(ctx, config, opt)

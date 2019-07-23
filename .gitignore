@@ -30,3 +30,6 @@ gen/
 
 # Goland IDe
 .idea/
+
+# VSCode IDe
+.vscode/
