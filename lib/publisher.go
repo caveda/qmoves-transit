@@ -12,10 +12,10 @@ import (
 )
 
 // Constants
-const envDatabaseUri string = "DATABASE_URI"
+const envDatabaseURI string = "DATABASE_URI"
 const envDatabaseCredentials string = "DATABASE_CREDENTIALS_PATH"
 const formmatedLinesOutputName string = "alllines.json"
-const envDoNotPublish string = "DO_NOT_PUBLISH_REMOTE"
+const envDryRun string = "DRY_RUN"
 
 // Publish deploys lines in the correct format in path.
 // The format is determined by the presenter.
@@ -26,7 +26,7 @@ func Publish(td TransitData, destPath string, p Presenter) error {
 		return err
 	}
 
-	if GetEnvVariableValueBool(envDoNotPublish) {
+	if !GetEnvVariableValueBool(envDryRun) {
 		log.Printf("Publishing data to remote source")
 		if err := publishRemote(td); err != nil {
 			log.Printf("Error publishing lines remotely: %v", err)
@@ -49,6 +49,8 @@ func publishLocally(lines []Line, destPath string, p Presenter) error {
 		return err
 	}
 
+	log.Printf("Data hash: %v", MD5(json))
+
 	// Write formatted line as a file in destination
 	err = CreateFile(path.Join(destPath, formmatedLinesOutputName), json)
 	if err != nil {
@@ -62,16 +64,16 @@ func publishLocally(lines []Line, destPath string, p Presenter) error {
 // publishRemote reads the json documents generated in the given paths
 // and publishes them in remote storage for the clients to consume.
 func publishRemote(td TransitData) error {
-	ctx := context.Background()
-	client, err := getFirebaseClient(ctx)
-	if err != nil {
-		return err
-	}
+	// ctx := context.Background()
+	// client, err := getFirebaseClient(ctx)
+	// if err != nil {
+	// 	return err
+	// }
 
-	if err = postMetadata(ctx, client, td.metadata, "Bilbobus/Metadata"); err != nil {
-		return err
-	}
-	log.Printf("Published remotely version %v", td.metadata)
+	// if err = postMetadata(ctx, client, td.metadata, "Bilbobus/Metadata"); err != nil {
+	// 	return err
+	// }
+	// log.Printf("Published remotely version %v", td.metadata)
 
 	return nil
 }
@@ -107,7 +109,7 @@ func postStopList(ctx context.Context, c *db.Client, stops []Stop, path string) 
 
 func getFirebaseClient(ctx context.Context) (*db.Client, error) {
 	config := &firebase.Config{
-		DatabaseURL: os.Getenv(envDatabaseUri),
+		DatabaseURL: os.Getenv(envDatabaseURI),
 	}
 
 	credentials := os.Getenv(envDatabaseCredentials)

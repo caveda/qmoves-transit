@@ -1,8 +1,11 @@
 package transit
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"errors"
 	"hash/crc32"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -95,4 +98,11 @@ func GetEnvVariableValueBool(v string) bool {
 		result = b
 	}
 	return result
+}
+
+// MD5 returns the MD5 checksum of the input as string
+func MD5(s string) string {
+	hash := md5.New()
+	io.WriteString(hash, s)
+	return hex.EncodeToString(hash.Sum(nil))
 }
