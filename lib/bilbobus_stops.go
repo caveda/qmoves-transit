@@ -209,9 +209,11 @@ func buildConnectionList(connectionsRaw string) string {
 
 	var connections string
 	for i, m := range matches {
-		connections += buildConnectionCode(m[1], m[2])
-		if i < len(matches)-1 {
-			connections += " "
+		if !IsIgnored(m[2]) {
+			connections += buildConnectionCode(m[1], m[2])
+			if i < len(matches)-1 {
+				connections += " "
+			}
 		}
 	}
 	return connections
@@ -223,3 +225,4 @@ func buildConnectionCode(direction, id string) string {
 	}
 	return DirectionBackwardShortPrefix + id
 }
+

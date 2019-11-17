@@ -5,6 +5,8 @@ package transit
 import (
 	"errors"
 	"strings"
+	"log"
+	"os"
 )
 
 // Consts
@@ -35,6 +37,7 @@ const EnvRemoveDuplicatedStopsInLine string = "REMOVE_DUPLICATED_STOPS_IN_LINE"
 // Globals
 var Directions = [2]string{DirectionForward, DirectionBackward}
 var DirectionsPrefixes = [2]string{DirectionForwardShortPrefix, DirectionBackwardShortPrefix}
+var LinesIgnored map[string]bool
 
 // Bilbobus is a parser of transit information of Bilbao bus agency.
 type TransitData struct {
@@ -173,4 +176,38 @@ func ReverseLineName(name string) (string, error) {
 // direction FORWARD)
 func BuildLineIdWithDirection(id, direction string) string {
 	return ToDirectionPrefix(direction) + id
+}
+
+// LoadIgnoreLineIds loads the list of line ids to ignore from environment
+func LoadIgnoreLineIds() map[string]bool {
+	var linesIgnored = make(map[string]bool)
+	envData := os.Getenv(envIgnoreLinesIds)
+	// Anything to ignore?
+	if len(envData) == 0 {
+		log.Printf("Env variable %v is empty. Nothing to ignore.", envIgnoreLinesIds)
+		return nil
+	}
+
+	ids := strings.Split(envData, ",")
+	if len(ids) == 0 {
+		log.Printf("No lines shall be ignored")
+		return nil
+	}
+
+	for _, id := range ids {
+		linesIgnored[strings.TrimSpace(id)] = true
+	}
+
+	return linesIgnored
+}
+
+// IsIgnored checks whether line id should be ignored
+func IsIgnored(id string) bool {
+
+	ignored := false
+	if LinesIgnored!=nil {
+		_, ignored = LinesIgnored[strings.TrimSpace(id)]
+	}
+
+	return ignored
 }
